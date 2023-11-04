@@ -15,6 +15,7 @@ namespace PTCGLDeckTracker
         bool enableDeckTracker = false;
         static Dictionary<string, int> deck = new Dictionary<string, int>();
         static Dictionary<string, int> deckWithIds = new Dictionary<string, int>();
+        static List<string> deckRenderOrder = new List<string>();
 
         public static int GetTotalQuantityOfCards()
         {
@@ -48,9 +49,9 @@ namespace PTCGLDeckTracker
             string deckString = "";
             if (deck.Count != 0)
             {
-                foreach (var keypair in deck)
+                foreach (var card in deckRenderOrder)
                 {
-                    deckString += keypair.Value + " " + keypair.Key + "\n";
+                    deckString += deck[card] + " " + card + "\n";
                 }
                 deckString += "\nTotal Cards in Deck: " + IronTracks.GetTotalQuantityOfCards();
             }
@@ -69,14 +70,45 @@ namespace PTCGLDeckTracker
                 IronTracks.deck.Clear();
                 IronTracks.deckWithIds.Clear();
 
-                // Messy Hack Loops to sort the Deck by Pokemon, Trainers, Energy
-                foreach(var pair in game.players[0].deckInfo.cards)
+                var pokemons = new List<string>();
+                var trainers = new List<string>();
+                var energies = new List<string>();
+
+                foreach (var pair in game.players[0].deckInfo.cards)
                 {
                     var quantity = pair.Value;
                     var cardID = pair.Key;
                     CardDatabase.DataAccess.CardDataRow cdr = ManagerSingleton<CardDatabaseManager>.instance.TryGetCardFromDatabase(cardID);
                     IronTracks.deck[cdr.EnglishCardName] = quantity;
                     IronTracks.deckWithIds[cardID] = quantity;
+
+                    if (cdr.IsPokemonCard())
+                    {
+                        pokemons.Add(cdr.EnglishCardName);
+                    }
+                    else if (cdr.IsTrainerCard())
+                    {
+                        trainers.Add(cdr.EnglishCardName);
+                    }
+                    else
+                    {
+                        energies.Add(cdr.EnglishCardName);
+                    }
+                }
+
+                IronTracks.deckRenderOrder.Clear();
+
+                foreach (var item in pokemons)
+                {
+                    IronTracks.deckRenderOrder.Add(item);
+                }
+                foreach (var item in trainers)
+                {
+                    IronTracks.deckRenderOrder.Add(item);
+                }
+                foreach (var item in energies)
+                {
+                    IronTracks.deckRenderOrder.Add(item);
                 }
             }
         }
