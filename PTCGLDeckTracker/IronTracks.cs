@@ -13,19 +13,9 @@ namespace PTCGLDeckTracker
     public class IronTracks : MelonMod
     {
         bool enableDeckTracker = false;
-        static Dictionary<string, int> deck = new Dictionary<string, int>();
-        static Dictionary<string, int> deckWithIds = new Dictionary<string, int>();
-        static List<string> deckRenderOrder = new List<string>();
-
-        public static int GetTotalQuantityOfCards()
-        {
-            int total = 0;
-            foreach (KeyValuePair<string, int> kvp in deck)
-            {
-                total += kvp.Value;
-            }
-            return total;
-        }
+        bool enableOpponentDeck = false;
+        static Deck playerOneDeck = new Deck("playerOne");
+        static Deck playerTwoDeck = new Deck("playerTwo");
 
         public override void OnUpdate()
         {
@@ -34,28 +24,38 @@ namespace PTCGLDeckTracker
                 enableDeckTracker = !enableDeckTracker;
                 LoggerInstance.Msg("Toggled deck tracker: " + enableDeckTracker.ToString());
             }
+            else if (Input.GetKeyDown(KeyCode.X))
+            {
+                enableOpponentDeck = !enableOpponentDeck;
+                LoggerInstance.Msg("Toggled Opponent Deck Tracker: " + enableOpponentDeck.ToString());
+            }
         }
 
         public override void OnGUI()
         {
-            if (!enableDeckTracker)
+            if (enableDeckTracker)
             {
-                return;
+                var width = 250;
+                var location = new Rect(Screen.width - width, 0, width, Screen.height);
+                var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
+                GUI.Box(location, "Deck " + "(" + playerOneDeck.GetDeckOwner() + ")");
+
+                string deckString = playerOneDeck.DeckStringForRender();
+
+                GUI.Label(textLocation, deckString);
             }
-            var width = 250;
-            var location = new Rect(Screen.width - width, 0, width, Screen.height);
-            var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
-            GUI.Box(location, "Deck");
-            string deckString = "";
-            if (deck.Count != 0)
+
+            if (enableOpponentDeck)
             {
-                foreach (var card in deckRenderOrder)
-                {
-                    deckString += deck[card] + " " + card + "\n";
-                }
-                deckString += "\nTotal Cards in Deck: " + IronTracks.GetTotalQuantityOfCards();
+                var width = 250;
+                var location = new Rect(0, 0, width, Screen.height);
+                var textLocation = new Rect(5, 25, width, Screen.height);
+                GUI.Box(location, "Deck " + "(" + playerTwoDeck.GetDeckOwner() + ")");
+
+                string deckString = playerTwoDeck.DeckStringForRender();
+
+                GUI.Label(textLocation, deckString);
             }
-            GUI.Label(textLocation, deckString);
         }
 
         [HarmonyLib.HarmonyPatch(typeof(MatchManager), "SendMatchStartTelemetry")]
@@ -65,51 +65,15 @@ namespace PTCGLDeckTracker
             {
                 var playerOneName = game.players[0].playerName;
                 var playerTwoName = game.players[1].playerName;
+
+                playerOneDeck.SetDeckOwner(playerOneName);
+                playerTwoDeck.SetDeckOwner(playerTwoName);
+
                 Melon<IronTracks>.Logger.Msg(playerOneName + " vs. " + playerTwoName);
 
-                IronTracks.deck.Clear();
-                IronTracks.deckWithIds.Clear();
+                playerOneDeck.PopulateDeck(game.players[0].deckInfo.cards);
+                playerTwoDeck.PopulateDeck(game.players[1].deckInfo.cards);
 
-                var pokemons = new List<string>();
-                var trainers = new List<string>();
-                var energies = new List<string>();
-
-                foreach (var pair in game.players[0].deckInfo.cards)
-                {
-                    var quantity = pair.Value;
-                    var cardID = pair.Key;
-                    CardDatabase.DataAccess.CardDataRow cdr = ManagerSingleton<CardDatabaseManager>.instance.TryGetCardFromDatabase(cardID);
-                    IronTracks.deck[cdr.EnglishCardName] = quantity;
-                    IronTracks.deckWithIds[cardID] = quantity;
-
-                    if (cdr.IsPokemonCard())
-                    {
-                        pokemons.Add(cdr.EnglishCardName);
-                    }
-                    else if (cdr.IsTrainerCard())
-                    {
-                        trainers.Add(cdr.EnglishCardName);
-                    }
-                    else
-                    {
-                        energies.Add(cdr.EnglishCardName);
-                    }
-                }
-
-                IronTracks.deckRenderOrder.Clear();
-
-                foreach (var item in pokemons)
-                {
-                    IronTracks.deckRenderOrder.Add(item);
-                }
-                foreach (var item in trainers)
-                {
-                    IronTracks.deckRenderOrder.Add(item);
-                }
-                foreach (var item in energies)
-                {
-                    IronTracks.deckRenderOrder.Add(item);
-                }
             }
         }
     }
