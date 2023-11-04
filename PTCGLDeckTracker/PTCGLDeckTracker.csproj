@@ -43,6 +43,18 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="CardDatabase.DataAccess, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\CardDatabase.DataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="MatchLogic, Version=6.5.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\MatchLogic.dll</HintPath>
+    </Reference>
     <Reference Include="MelonLoader">
       <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
