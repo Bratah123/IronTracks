@@ -1,5 +1,12 @@
 # Iron Tracks
 Iron Tracks is a deck tracker for the Pokemon Trading Card Game Live, whose goal is to allow players to easily keep track of their deck resources in-game with live UI.
+**Please Read Disclaimer** about Iron Tracks below!!
+
+# Installation
+1. Navigate to the Release Page.
+2. Download the latest verison zip in the Release Page.
+3. Unzip all the contents into your PTCGL's client's folder.
+4. Press Z in-game to toggle the Deck Tracker UI
 
 # Disclaimer
 Iron Tracks is an open-source Unity Mod that modifies the PTCGL client's game, and serves them to end users as a fully functional deck tracker. Iron Tracks is an educational project for demonstrating various techniques, such as reverse engineering and game modding.
