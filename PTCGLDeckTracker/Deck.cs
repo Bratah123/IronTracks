@@ -49,6 +49,25 @@ namespace PTCGLDeckTracker
             return deckString;
         }
 
+        public string DeckStringWithIds()
+        {
+            string deckString = "";
+
+            if (deckWithIds.Count == 0)
+            {
+                return deckString;
+            }
+
+            foreach (var kvp in deckWithIds)
+            {
+                deckString += kvp.Value + " " + kvp.Key + "\n";
+            }
+
+            deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
+
+            return deckString;
+        }
+
         public int GetTotalQuantityOfCards()
         {
             int total = 0;

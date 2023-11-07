@@ -7,6 +7,8 @@ using UnityEngine;
 using Harmony;
 using HarmonyLib;
 using MelonLoader;
+using RainierClientSDK;
+using UnityEngine.SceneManagement;
 
 namespace PTCGLDeckTracker
 {
@@ -29,6 +31,21 @@ namespace PTCGLDeckTracker
                 enableOpponentDeck = !enableOpponentDeck;
                 LoggerInstance.Msg("Toggled Opponent Deck Tracker: " + enableOpponentDeck.ToString());
             }
+            else if (Input.GetKeyDown(KeyCode.C))
+            {
+                LoggerInstance.Msg("Debug: Spawning a Card Basic");
+
+                string currentScene = SceneManager.GetActiveScene().name;
+                float rotationOnX = (currentScene == "Match_Landscape") ? -55f : 0f;
+
+                CardBasic cardBasic = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
+                Vector3 vector = new Vector3(0f, 0f, Card3D.cardDepth * 1);
+                // For some reason, these cards are instantiated backwards
+                cardBasic.transform.position = vector;
+                cardBasic.transform.rotation = Quaternion.Euler(rotationOnX, 180f, 0f);
+                cardBasic.transform.localScale = new Vector3(2f, 2f, 2f);
+                cardBasic.Init("swsh11_137");
+            }
         }
 
         public override void OnGUI()
@@ -40,7 +57,7 @@ namespace PTCGLDeckTracker
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
                 GUI.Box(location, "Deck " + "(" + playerOneDeck.GetDeckOwner() + ")");
 
-                string deckString = playerOneDeck.DeckStringForRender();
+                string deckString = playerOneDeck.DeckStringWithIds();
 
                 GUI.Label(textLocation, deckString);
             }
@@ -52,7 +69,7 @@ namespace PTCGLDeckTracker
                 var textLocation = new Rect(5, 25, width, Screen.height);
                 GUI.Box(location, "Deck " + "(" + playerTwoDeck.GetDeckOwner() + ")");
 
-                string deckString = playerTwoDeck.DeckStringForRender();
+                string deckString = playerOneDeck.DeckStringForRender();
 
                 GUI.Label(textLocation, deckString);
             }
@@ -73,7 +90,6 @@ namespace PTCGLDeckTracker
 
                 playerOneDeck.PopulateDeck(game.players[0].deckInfo.cards);
                 playerTwoDeck.PopulateDeck(game.players[1].deckInfo.cards);
-
             }
         }
     }

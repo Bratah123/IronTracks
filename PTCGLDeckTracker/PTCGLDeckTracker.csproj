@@ -58,6 +58,10 @@
     <Reference Include="MelonLoader">
       <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
+    <Reference Include="RainierClientSDK, Version=13.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\RainierClientSDK.dll</HintPath>
+    </Reference>
     <Reference Include="SharedLogicUtils, Version=8.0.4.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\SharedLogicUtils.dll</HintPath>
