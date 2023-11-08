@@ -92,6 +92,35 @@ namespace PTCGLDeckTracker
                 playerTwoDeck.PopulateDeck(game.players[1].deckInfo.cards);
             }
         }
+
+        [HarmonyLib.HarmonyPatch(typeof(DeckController), "ProcessCardGainedResult")]
+        class ProcessCardGainedPatch
+        {
+            static void Postfix(DeckController __instance, OwnerData data, bool gainedFromDrop)
+            {
+                if (__instance && __instance.GetType() == typeof(DeckController))
+                {
+                    var ownedCards = "";
+                    foreach (var card in __instance.GetOwnedCards())
+                    {
+                        ownedCards += "Card Name: " + card.name + ", Card ID: " + card.cardSourceID + "\n";
+                    }
+                    Melon<IronTracks>.Logger.Msg(ownedCards);
+                }
+            }
+        }
+
+        [HarmonyLib.HarmonyPatch(typeof(DeckController), "ProcessCardRemovalResult")]
+        class ProcessCardRemovalResultPatch
+        {
+            static void Postfix(DeckController __instance, OwnerData data, bool droppingCard)
+            {
+                if (__instance && __instance.GetType() == typeof(DeckController))
+                {
+                    Melon<IronTracks>.Logger.Msg("Removed Card from DeckController: " + data.card.name);
+                }
+            }
+        }
     }
 
 }
