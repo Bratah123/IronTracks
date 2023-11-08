@@ -57,7 +57,7 @@ namespace PTCGLDeckTracker
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
                 GUI.Box(location, "Deck " + "(" + playerOneDeck.GetDeckOwner() + ")");
 
-                string deckString = playerOneDeck.DeckStringWithIds();
+                string deckString = playerOneDeck.DeckStringForRender();
 
                 GUI.Label(textLocation, deckString);
             }
@@ -69,7 +69,7 @@ namespace PTCGLDeckTracker
                 var textLocation = new Rect(5, 25, width, Screen.height);
                 GUI.Box(location, "Deck " + "(" + playerTwoDeck.GetDeckOwner() + ")");
 
-                string deckString = playerOneDeck.DeckStringForRender();
+                string deckString = playerTwoDeck.DeckStringForRender();
 
                 GUI.Label(textLocation, deckString);
             }
@@ -98,9 +98,17 @@ namespace PTCGLDeckTracker
         {
             static void Postfix(DeckController __instance, OwnerData data, bool gainedFromDrop)
             {
-                if (__instance && __instance.GetType() == typeof(DeckController))
+                if (!__instance)
+                {
+                    return;
+                }
+                if (__instance.GetType() == typeof(DeckController))
                 {
                     var ownedCards = "";
+                    if (__instance.playerID != PlayerID.LOCAL)
+                    {
+                        return;
+                    }
                     foreach (var card in __instance.GetOwnedCards())
                     {
                         ownedCards += "Card Name: " + card.name + ", Card ID: " + card.cardSourceID + "\n";
@@ -115,8 +123,16 @@ namespace PTCGLDeckTracker
         {
             static void Postfix(DeckController __instance, OwnerData data, bool droppingCard)
             {
-                if (__instance && __instance.GetType() == typeof(DeckController))
+                if (!__instance)
                 {
+                    return;
+                }
+                if (__instance.GetType() == typeof(DeckController))
+                {
+                    if (__instance.playerID != PlayerID.LOCAL)
+                    {
+                        return;
+                    }
                     Melon<IronTracks>.Logger.Msg("Removed Card from DeckController: " + data.card.name);
                 }
             }
