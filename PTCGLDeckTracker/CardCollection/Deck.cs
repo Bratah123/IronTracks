@@ -1,47 +1,48 @@
 ﻿using System.Collections.Generic;
 
-namespace PTCGLDeckTracker
+namespace PTCGLDeckTracker.CardCollection
 {
-    internal class Deck
+    internal class Deck : CardCollection
     {
-        Dictionary<string, int> deck = new Dictionary<string, int>();
-        Dictionary<string, int> deckWithIds = new Dictionary<string, int>();
+        private string _deckOwner = "";
+
+        /// <summary>
+        /// Cards below here are transient data, and are mutated throughout the game
+        /// </summary>
         List<string> deckRenderOrder = new List<string>();
-        private string deckOwner = "";
 
         public Deck(string deckOwner)
         {
-            this.deckOwner = deckOwner.Trim();
+            this._deckOwner = deckOwner.Trim();
         }
 
-        public void Clear()
+        override public void Clear()
         {
-            deck.Clear();
-            deckWithIds.Clear();
+            base.Clear();
             deckRenderOrder.Clear();
         }
 
         public string GetDeckOwner()
         {
-            return deckOwner;
+            return _deckOwner;
         }
 
         public void SetDeckOwner(string deckOwner)
         {
-            this.deckOwner = deckOwner;
+            this._deckOwner = deckOwner;
         }
 
         public string DeckStringForRender()
         {
             string deckString = "";
 
-            if (deckWithIds.Count == 0)
+            if (_cardsWithId.Count == 0)
             {
                 return deckString;
             }
 
             foreach (var card in deckRenderOrder) {
-                deckString += deck[card] + " " + card + "\n";
+                deckString += _cards[card] + " " + card + "\n";
             }
 
             deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
@@ -49,16 +50,21 @@ namespace PTCGLDeckTracker
             return deckString;
         }
 
+        /// <summary>
+        /// For debug purposes, this will return a string that contains the decklist
+        /// but instead of english card names, it's their PTCGL card ids.
+        /// </summary>
+        /// <returns>String</returns>
         public string DeckStringWithIds()
         {
             string deckString = "";
 
-            if (deckWithIds.Count == 0)
+            if (_cardsWithId.Count == 0)
             {
                 return deckString;
             }
 
-            foreach (var kvp in deckWithIds)
+            foreach (var kvp in _cardsWithId)
             {
                 deckString += kvp.Value + " " + kvp.Key + "\n";
             }
@@ -71,7 +77,7 @@ namespace PTCGLDeckTracker
         public int GetTotalQuantityOfCards()
         {
             int total = 0;
-            foreach (KeyValuePair<string, int> kvp in deck)
+            foreach (KeyValuePair<string, int> kvp in _cards)
             {
                 total += kvp.Value;
             }
@@ -92,8 +98,8 @@ namespace PTCGLDeckTracker
                 var cardID = pair.Key;
 
                 CardDatabase.DataAccess.CardDataRow cdr = ManagerSingleton<CardDatabaseManager>.instance.TryGetCardFromDatabase(cardID);
-                this.deck[cdr.EnglishCardName] = quantity;
-                deckWithIds[cardID] = quantity;
+                _cards[cdr.EnglishCardName] = quantity;
+                _cardsWithId[cardID] = quantity;
 
                 if (cdr.IsPokemonCard())
                 {

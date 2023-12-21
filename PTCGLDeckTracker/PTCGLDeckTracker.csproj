@@ -89,8 +89,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Deck.cs" />
+    <Compile Include="CardCollection\Card.cs" />
+    <Compile Include="CardCollection\CardCollection.cs" />
+    <Compile Include="CardCollection\Deck.cs" />
+    <Compile Include="CardCollection\DiscardPile.cs" />
+    <Compile Include="CardCollection\Hand.cs" />
+    <Compile Include="CardCollection\PrizeCards.cs" />
     <Compile Include="IronTracks.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

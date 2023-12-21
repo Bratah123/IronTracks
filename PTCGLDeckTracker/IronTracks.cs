@@ -9,15 +9,16 @@ using HarmonyLib;
 using MelonLoader;
 using RainierClientSDK;
 using UnityEngine.SceneManagement;
+using PTCGLDeckTracker.CardCollection;
 
 namespace PTCGLDeckTracker
 {
     public class IronTracks : MelonMod
     {
         bool enableDeckTracker = false;
-        bool enableOpponentDeck = false;
-        static Deck playerOneDeck = new Deck("playerOne");
-        static Deck playerTwoDeck = new Deck("playerTwo");
+        bool enablePrizeCards = false;
+        static Player player = new Player();
+        const String GAME_SCENE_NAME = "Match_Landscape";
 
         public override void OnUpdate()
         {
@@ -28,19 +29,21 @@ namespace PTCGLDeckTracker
             }
             else if (Input.GetKeyDown(KeyCode.X))
             {
-                enableOpponentDeck = !enableOpponentDeck;
-                LoggerInstance.Msg("Toggled Opponent Deck Tracker: " + enableOpponentDeck.ToString());
+                enablePrizeCards = !enablePrizeCards;
+                LoggerInstance.Msg("Toggled Opponent Deck Tracker: " + enablePrizeCards.ToString());
             }
-            else if (Input.GetKeyDown(KeyCode.C))
+            else if (Input.GetKeyDown(KeyCode.C) && SceneManager.GetActiveScene().name == GAME_SCENE_NAME)
             {
                 LoggerInstance.Msg("Debug: Spawning a Card Basic");
-
-                string currentScene = SceneManager.GetActiveScene().name;
-                float rotationOnX = (currentScene == "Match_Landscape") ? -55f : 0f;
+                
+                // While in the game scene, the basic card spawn in with a rotation of 0 while the entire game is
+                // rotated on the X axis ever so slightly, this -55f offset is to make the card appear flat on the
+                // player's POV
+                float rotationOnX = -55f;
 
                 CardBasic cardBasic = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
                 Vector3 vector = new Vector3(0f, 0f, Card3D.cardDepth * 1);
-                // For some reason, these cards are instantiated backwards
+                // For some reason, these cards are instantiated backwards, which causes the players to see the backside of the card
                 cardBasic.transform.position = vector;
                 cardBasic.transform.rotation = Quaternion.Euler(rotationOnX, 180f, 0f);
                 cardBasic.transform.localScale = new Vector3(2f, 2f, 2f);
@@ -55,23 +58,19 @@ namespace PTCGLDeckTracker
                 var width = 250;
                 var location = new Rect(Screen.width - width, 0, width, Screen.height);
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
-                GUI.Box(location, "Deck " + "(" + playerOneDeck.GetDeckOwner() + ")");
+                GUI.Box(location, "Deck " + "(" + player.GetDeck().GetDeckOwner() + ")");
 
-                string deckString = playerOneDeck.DeckStringForRender();
+                string deckString = player.GetDeck().DeckStringForRender();
 
                 GUI.Label(textLocation, deckString);
             }
 
-            if (enableOpponentDeck)
+            if (enablePrizeCards)
             {
                 var width = 250;
-                var location = new Rect(0, 0, width, Screen.height);
-                var textLocation = new Rect(5, 25, width, Screen.height);
-                GUI.Box(location, "Deck " + "(" + playerTwoDeck.GetDeckOwner() + ")");
-
-                string deckString = playerTwoDeck.DeckStringForRender();
-
-                GUI.Label(textLocation, deckString);
+                var location = new Rect(0, 250, width, 500);
+                var textLocation = new Rect(5, 25, width, 500);
+                GUI.Box(location, "Prize Cards");
             }
         }
 
@@ -81,15 +80,18 @@ namespace PTCGLDeckTracker
             static void Prefix(MatchManager __instance, NetworkMatchController.MatchDetails game)
             {
                 var playerOneName = game.players[0].playerName;
+
+                player.username = playerOneName;
+
+                // For other developers to note, it seems that pokemon exposes the 2nd player's information too :/
+                // This could prove to be problematic for many reasons I won't get into.
                 var playerTwoName = game.players[1].playerName;
 
-                playerOneDeck.SetDeckOwner(playerOneName);
-                playerTwoDeck.SetDeckOwner(playerTwoName);
+                player.GetDeck().SetDeckOwner(playerOneName);
 
                 Melon<IronTracks>.Logger.Msg(playerOneName + " vs. " + playerTwoName);
 
-                playerOneDeck.PopulateDeck(game.players[0].deckInfo.cards);
-                playerTwoDeck.PopulateDeck(game.players[1].deckInfo.cards);
+                player.GetDeck().PopulateDeck(game.players[0].deckInfo.cards);
             }
         }
 
@@ -104,16 +106,12 @@ namespace PTCGLDeckTracker
                 }
                 if (__instance.GetType() == typeof(DeckController))
                 {
-                    var ownedCards = "";
+                    // Make sure that we are targetting the local player (ourself)
                     if (__instance.playerID != PlayerID.LOCAL)
                     {
                         return;
                     }
-                    foreach (var card in __instance.GetOwnedCards())
-                    {
-                        ownedCards += "Card Name: " + card.name + ", Card ID: " + card.cardSourceID + "\n";
-                    }
-                    Melon<IronTracks>.Logger.Msg(ownedCards);
+                    Melon<IronTracks>.Logger.Msg("Added Card " + data.card.name + " back into deck.");
                 }
             }
         }
