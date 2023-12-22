@@ -41,8 +41,8 @@ namespace PTCGLDeckTracker.CardCollection
                 return deckString;
             }
 
-            foreach (var card in deckRenderOrder) {
-                deckString += _cards[card] + " " + card + "\n";
+            foreach (var cardID in deckRenderOrder) {
+                deckString += _cards[cardID].quantity + " " + _cards[cardID] + "\n";
             }
 
             deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
@@ -77,9 +77,9 @@ namespace PTCGLDeckTracker.CardCollection
         public int GetTotalQuantityOfCards()
         {
             int total = 0;
-            foreach (KeyValuePair<string, int> kvp in _cards)
+            foreach (KeyValuePair<string, Card> kvp in _cards)
             {
-                total += kvp.Value;
+                total += kvp.Value.quantity;
             }
             return total;
         }
@@ -98,20 +98,26 @@ namespace PTCGLDeckTracker.CardCollection
                 var cardID = pair.Key;
 
                 CardDatabase.DataAccess.CardDataRow cdr = ManagerSingleton<CardDatabaseManager>.instance.TryGetCardFromDatabase(cardID);
-                _cards[cdr.EnglishCardName] = quantity;
+
+                var card = new Card(cardID);
+                card.quantity = quantity;
+                card.englishName = cdr.EnglishCardName;
+                card.setID = cdr.CardSetID;
+
+                _cards[cardID] = card;
                 _cardsWithId[cardID] = quantity;
 
                 if (cdr.IsPokemonCard())
                 {
-                    pokemons.Add(cdr.EnglishCardName);
+                    pokemons.Add(cardID);
                 }
                 else if (cdr.IsTrainerCard())
                 {
-                    trainers.Add(cdr.EnglishCardName);
+                    trainers.Add(cardID);
                 }
                 else
                 {
-                    energies.Add(cdr.EnglishCardName);
+                    energies.Add(cardID);
                 }
             }
 
@@ -127,6 +133,16 @@ namespace PTCGLDeckTracker.CardCollection
             {
                 deckRenderOrder.Add(item);
             }
+        }
+
+        public override void OnCardAdded(Card3D cardID)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void OnCardRemoved(Card3D cardID)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

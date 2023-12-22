@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace PTCGLDeckTracker.CardCollection
 {
-    internal class CardCollection
+    internal abstract class CardCollection
     {
-        protected Dictionary<string, int> _cards = new Dictionary<string, int>();
+        // card_id : Card
+        protected Dictionary<string, Card> _cards = new Dictionary<string, Card>();
 
         // card_id : quantity
         protected Dictionary<string, int> _cardsWithId = new Dictionary<string, int>();
@@ -20,5 +21,19 @@ namespace PTCGLDeckTracker.CardCollection
             _cards.Clear();
             _cardsWithId.Clear();
         }
+
+        /// <summary>
+        /// Called whenever a Card is Added back into the physical card collection (hand, discard, lost zone, etc..) in game.
+        /// Used by us to keep track internally of cards.
+        /// </summary>
+        /// <param name="cardID"></param>
+        abstract public void OnCardAdded(Card3D cardID);
+
+        /// <summary>
+        /// Called whenever a Card is removed from the physical card collection (hand, discard, deck, etc..) in game.
+        /// Used by us to keep track internally of cards.
+        /// </summary>
+        /// <param name="cardID"></param>
+        abstract public void OnCardRemoved(Card3D cardID);
     }
 }

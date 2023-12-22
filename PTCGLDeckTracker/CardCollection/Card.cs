@@ -10,12 +10,20 @@ namespace PTCGLDeckTracker.CardCollection
     // This Card class does not represent each single card in a deck as it can count for multiple cards
     internal class Card
     {
-        public string cardId { get; set; }
-        public string quantity { get; set; }
+        public string cardID { get; set; }
+        public int quantity { get; set; }
         public string englishName { get; set; }
 
-        public Card() { }
+        public string setID {  get; set; }
 
+        public Card(string cardID) {
+            this.cardID = cardID;
+        }
+
+        public override string ToString()
+        {
+            return englishName;
+        }
 
     }
 }

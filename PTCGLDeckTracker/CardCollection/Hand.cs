@@ -8,5 +8,14 @@ namespace PTCGLDeckTracker.CardCollection
 {
     internal class Hand : CardCollection
     {
+        public override void OnCardAdded(Card3D cardID)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void OnCardRemoved(Card3D cardID)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
