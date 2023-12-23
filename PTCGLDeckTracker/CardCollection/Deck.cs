@@ -135,12 +135,12 @@ namespace PTCGLDeckTracker.CardCollection
             }
         }
 
-        public override void OnCardAdded(Card3D cardID)
+        public override void OnCardAdded(Card3D cardAdded)
         {
             throw new System.NotImplementedException();
         }
 
-        public override void OnCardRemoved(Card3D cardID)
+        public override void OnCardRemoved(Card3D cardRemoved)
         {
             throw new System.NotImplementedException();
         }

@@ -27,13 +27,13 @@ namespace PTCGLDeckTracker.CardCollection
         /// Used by us to keep track internally of cards.
         /// </summary>
         /// <param name="cardID"></param>
-        abstract public void OnCardAdded(Card3D cardID);
+        abstract public void OnCardAdded(Card3D cardAdded);
 
         /// <summary>
         /// Called whenever a Card is removed from the physical card collection (hand, discard, deck, etc..) in game.
         /// Used by us to keep track internally of cards.
         /// </summary>
         /// <param name="cardID"></param>
-        abstract public void OnCardRemoved(Card3D cardID);
+        abstract public void OnCardRemoved(Card3D cardRemoved);
     }
 }
