@@ -16,7 +16,8 @@ namespace PTCGLDeckTracker.CardCollection
 
         public string setID {  get; set; }
 
-        public Card(string cardID) {
+        public Card(string cardID)
+        {
             this.cardID = cardID;
         }
 
