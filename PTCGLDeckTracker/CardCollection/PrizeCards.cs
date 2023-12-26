@@ -27,5 +27,10 @@ namespace PTCGLDeckTracker.CardCollection
         {
             return _cardCount;
         }
+
+        public string PrizeCardStringForRender()
+        {
+            return "Total Prize Cards: " + _cardCount;
+        }
     }
 }

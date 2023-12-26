@@ -82,7 +82,7 @@ namespace PTCGLDeckTracker
 
                 var textLocation = new Rect(5, height + 25, width, 500);
                 GUI.Box(location, "Prize Cards");
-                GUI.Label(location, "", deckGUIStyle);
+                GUI.Label(textLocation, player.GetPrizeCards().PrizeCardStringForRender(), deckGUIStyle);
             }
         }
 
