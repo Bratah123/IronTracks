@@ -68,8 +68,9 @@ namespace PTCGLDeckTracker
             if (enablePrizeCards)
             {
                 var width = 250;
-                var location = new Rect(0, 250, width, 500);
-                var textLocation = new Rect(5, 25, width, 500);
+                var height = 225;
+                var location = new Rect(0, 225, width, 500);
+                var textLocation = new Rect(5, height + 25, width, 500);
                 GUI.Box(location, "Prize Cards");
             }
         }
@@ -95,10 +96,10 @@ namespace PTCGLDeckTracker
             }
         }
 
-        [HarmonyLib.HarmonyPatch(typeof(CardSetOwner), "ProcessCardGainedResult")]
+        [HarmonyLib.HarmonyPatch(typeof(PlayerCardOwner), "ProcessCardGainedResult")]
         class ProcessCardGainedPatch
         {
-            static void Postfix(CardSetOwner __instance, OwnerData data, bool gainedFromDrop)
+            static void Postfix(PlayerCardOwner __instance, OwnerData data, bool gainedFromDrop)
             {
                 if (!__instance)
                 {
@@ -113,10 +114,10 @@ namespace PTCGLDeckTracker
             }
         }
 
-        [HarmonyLib.HarmonyPatch(typeof(CardSetOwner), "ProcessCardRemovalResult")]
+        [HarmonyLib.HarmonyPatch(typeof(PlayerCardOwner), "ProcessCardRemovalResult")]
         class ProcessCardRemovalResultPatch
         {
-            static void Postfix(CardSetOwner __instance, OwnerData data, bool droppingCard)
+            static void Postfix(PlayerCardOwner __instance, OwnerData data, bool droppingCard)
             {
                 if (!__instance)
                 {

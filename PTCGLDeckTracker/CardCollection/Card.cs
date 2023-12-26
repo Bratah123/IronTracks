@@ -26,5 +26,11 @@ namespace PTCGLDeckTracker.CardCollection
             return englishName;
         }
 
+        public static string GetEnglishNameFromCard3DName(string card3DName)
+        {
+            // Card3D names are formatted as "Card3D_English Name Here"
+            // This function will split between "_" characters and get the last object in the list
+            return card3DName.Split('_').Last();
+        }
     }
 }

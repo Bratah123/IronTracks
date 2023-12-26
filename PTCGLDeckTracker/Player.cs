@@ -29,27 +29,27 @@ namespace PTCGLDeckTracker
             this.username = string.Empty;
         }
 
-        public void OnGainCardIntoCollection(Card3D cardGained, CardSetOwner cardSetOwner)
+        public void OnGainCardIntoCollection(Card3D cardAdded, PlayerCardOwner playerCardOwner)
         {
-            if (cardSetOwner.GetType() == typeof(DeckController))
+            if (playerCardOwner.GetType() == typeof(DeckController))
             {
-                Melon<IronTracks>.Logger.Msg("Added Card " + cardGained.name + " into deck.");
+                deck.OnCardAdded(cardAdded);
             }
-            else if (cardSetOwner.GetType() == typeof(HandController))
+            else if (playerCardOwner.GetType() == typeof(HandFanController))
             {
-                Melon<IronTracks>.Logger.Msg("Added Card " + cardGained.name + " into hand.");
+                hand.OnCardAdded(cardAdded);
             }
         }
 
-        public void OnRemovedCardFromCollection(Card3D cardRemoved, CardSetOwner cardSetOwner)
+        public void OnRemovedCardFromCollection(Card3D cardRemoved, PlayerCardOwner playerCardOwner)
         {
-            if (cardSetOwner.GetType() == typeof(DeckController))
+            if (playerCardOwner.GetType() == typeof(DeckController))
             {
-                Melon<IronTracks>.Logger.Msg("Removed Card " + cardRemoved.name + " from deck.");
+                deck.OnCardRemoved(cardRemoved);
             }
-            else if (cardSetOwner.GetType() == typeof(HandController))
+            else if (playerCardOwner.GetType() == typeof(HandFanController))
             {
-                Melon<IronTracks>.Logger.Msg("Removed Card " + cardRemoved.name + " from hand.");
+                hand.OnCardRemoved(cardRemoved);
             }
         }
     }

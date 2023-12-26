@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Harmony;
+using MelonLoader;
+using System.Collections.Generic;
 
 namespace PTCGLDeckTracker.CardCollection
 {
@@ -7,9 +9,16 @@ namespace PTCGLDeckTracker.CardCollection
         private string _deckOwner = "";
 
         /// <summary>
-        /// Cards below here are transient data, and are mutated throughout the game
+        /// deckRenderOrder lets us know in what order the cards should be rendered in a list.
+        /// This list should never be mutated.
         /// </summary>
         List<string> deckRenderOrder = new List<string>();
+        private List<string> _knownCards = new List<string>();
+        /// <summary>
+        /// This dictionary keeps track of the current expected cards in deck
+        /// Transient data that is mutated.
+        /// </summary>
+        private Dictionary<string, Card> _currentCardsInDeck = new Dictionary<string, Card>();
 
         public Deck(string deckOwner)
         {
@@ -42,6 +51,10 @@ namespace PTCGLDeckTracker.CardCollection
             }
 
             foreach (var cardID in deckRenderOrder) {
+                if (_cards[cardID] == null)
+                {
+                    continue;
+                }
                 deckString += _cards[cardID].quantity + " " + _cards[cardID] + "\n";
             }
 
@@ -135,14 +148,96 @@ namespace PTCGLDeckTracker.CardCollection
             }
         }
 
+        private void UpdateCardQuantityInDeck(string cardID, int quantity)
+        {
+            foreach (var kvp in _cards)
+            {
+                Card card = kvp.Value;
+                if (card.cardID == cardID)
+                {
+                   card.quantity = quantity;
+                   break;
+                }
+            }
+        }
+
+        private void DecrementCardQuantity(string cardID)
+        {
+            foreach (var kvp in _cards)
+            {
+                Card card = kvp.Value;
+                if (card.cardID == cardID)
+                {
+                    if (card.quantity > 0)
+                    {
+                        card.quantity--;
+                    }
+                    break;
+                }
+            }
+        }
+
+        private void IncrementCardQuantity(string cardID)
+        {
+            foreach (var kvp in _cards)
+            {
+                Card card = kvp.Value;
+                if (card.cardID == cardID)
+                {
+                    if (card.quantity > 0)
+                    {
+                        card.quantity++;
+                    }
+                    break;
+                }
+            }
+        }
+
+        private void AddCardToCurrentDeck(Card3D cardAdded)
+        {
+            var currentCardInDeck = _currentCardsInDeck[cardAdded.cardSourceID];
+            if (currentCardInDeck == null) // If the card didn't already exist in the deck
+            {
+                // cardAdded.cardSourceID could be "", an empty string if the card is a PRIVATE card
+                // TCPI does this to indicate when a card is not yet "known" from a player.
+                var cardToAdd = new Card(cardAdded.cardSourceID);
+                cardToAdd.quantity = 1;
+                cardToAdd.englishName = Card.GetEnglishNameFromCard3DName(cardAdded.name);
+                _currentCardsInDeck[cardAdded.cardSourceID] = cardToAdd;
+            }
+            else
+            {
+                currentCardInDeck.quantity++;
+            }
+        }
+
+        private void RemoveCardFromCurrentDeck(Card3D cardRemoved)
+        {
+            var currentCardInDeck = _currentCardsInDeck[cardRemoved.cardSourceID];
+            if (currentCardInDeck != null)
+            {
+                if (currentCardInDeck.quantity > 0)
+                {
+                    currentCardInDeck.quantity--;
+                }
+
+                // If the quantity reaches 0 after being removed, delete it from the dictionary
+                if (currentCardInDeck.quantity == 0)
+                {
+                    _currentCardsInDeck.Remove(cardRemoved.cardSourceID);
+                }
+            }
+        }
+
         public override void OnCardAdded(Card3D cardAdded)
         {
-            throw new System.NotImplementedException();
+            Melon<IronTracks>.Logger.Msg("Added Card: " + Card.GetEnglishNameFromCard3DName(cardAdded.name) + " into deck.");
+            AddCardToCurrentDeck(cardAdded);
         }
 
         public override void OnCardRemoved(Card3D cardRemoved)
         {
-            throw new System.NotImplementedException();
+            Melon<IronTracks>.Logger.Msg("Removed Card: " + Card.GetEnglishNameFromCard3DName(cardRemoved.name) + " from deck.");
         }
     }
 }
