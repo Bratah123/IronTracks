@@ -113,6 +113,10 @@ namespace PTCGLDeckTracker.CardCollection
             foreach (var kvp in KnownPrizeCards)
             {
                 var card = kvp.Value;
+                if (card.quantity == 0)
+                {
+                    continue;
+                }
                 renderString += card.quantity + " " + card + "\n";
             }
             renderString += "\nTotal Prize Cards: " + _cardCount;

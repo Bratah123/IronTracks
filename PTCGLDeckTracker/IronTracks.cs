@@ -58,7 +58,7 @@ namespace PTCGLDeckTracker
                 string deckString = player.deck.DeckStringForRender();
 
                 var width = 250;
-                var boxHeight = deckString.Count(s => s == '\n') * 15;
+                var boxHeight = deckString.Count(s => s == '\n') * 20;
                 if (boxHeight == 0)
                 {
                     boxHeight = 100;
@@ -68,7 +68,7 @@ namespace PTCGLDeckTracker
                 
                 var deckGUIStyle = new GUIStyle();
                 deckGUIStyle.normal.textColor = Color.white;
-                deckGUIStyle.fontSize = 14;
+                deckGUIStyle.fontSize = 15;
 
                 GUI.Box(location, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
                 GUI.Label(textLocation, deckString, deckGUIStyle);
@@ -82,7 +82,7 @@ namespace PTCGLDeckTracker
 
                 var deckGUIStyle = new GUIStyle();
                 deckGUIStyle.normal.textColor = Color.white;
-                deckGUIStyle.fontSize = 14;
+                deckGUIStyle.fontSize = 15;
 
                 var textLocation = new Rect(5, height + 25, width, 500);
                 GUI.Box(location, "Prize Cards");
