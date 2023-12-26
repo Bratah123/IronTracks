@@ -221,6 +221,48 @@ namespace PTCGLDeckTracker.CardCollection
                     cardInDeck.quantity--;
                 }
             }
+            var assumedTotal = GetAssumedTotalQuantityOfCards();
+            // When players deck search, deduce the prize cards
+            if (_cardCount == 0 && assumedTotal != 0 && assumedTotal != prizeCards.GetKnownPrizeCardsCount())
+            {
+                if (assumedTotal == prizeCards.GetPrizeCount())
+                {
+                    // Move all the current cards still "assumed" left in the deck to prize cards
+                    foreach (var kvp in _currentCardsInDeck)
+                    {
+                        // All cards with a quantity of non-zero value during a deck search is considered a prized card
+                        if (kvp.Value.quantity != 0)
+                        {
+                            var cardID = kvp.Value.cardID;
+                            var assumedPrizeCard = kvp.Value;
+                            prizeCards.KnownPrizeCards.Add(cardID, new Card(assumedPrizeCard));
+                            assumedPrizeCard.quantity = 0;
+                        }
+                    }
+                }
+                // This targets the edge case of when a player takes a prize card without ever having deck searched
+                else if (assumedTotal == (prizeCards.GetPrizeCount() + prizeCards.GetRemovedPrizeCardsCount()))
+                {
+                    // Remove the appropriate cards from the "assumed" deck
+                    foreach (var kvp in prizeCards.RemovedPrizedCards)
+                    {
+                        var removedPrizeCard = kvp.Value;
+                        _currentCardsInDeck[kvp.Key].quantity -= removedPrizeCard.quantity;
+                    }
+                    // Move all the current cards still "assumed" left in the deck to prize cards
+                    foreach (var kvp in _currentCardsInDeck)
+                    {
+                        // All cards with a quantity of non-zero value during a deck search is considered a prized card
+                        if (kvp.Value.quantity != 0)
+                        {
+                            var cardID = kvp.Value.cardID;
+                            var assumedPrizeCard = kvp.Value;
+                            prizeCards.KnownPrizeCards.Add(cardID, new Card(assumedPrizeCard));
+                            assumedPrizeCard.quantity = 0;
+                        }
+                    }
+                }
+            }
         }
 
         public override void OnCardAdded(Card3D cardAdded)

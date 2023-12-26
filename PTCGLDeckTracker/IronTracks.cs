@@ -34,7 +34,7 @@ namespace PTCGLDeckTracker
             }
             else if (Input.GetKeyDown(KeyCode.C) && SceneManager.GetActiveScene().name == GAME_SCENE_NAME)
             {
-                LoggerInstance.Msg("Debug: Spawning a Card Basic");
+                /*LoggerInstance.Msg("Debug: Spawning a Card Basic");
                 
                 // While in the game scene, the basic card spawn in with a rotation of 0 while the entire game is
                 // rotated on the X axis ever so slightly, this -55f offset is to make the card appear flat on the
@@ -47,7 +47,7 @@ namespace PTCGLDeckTracker
                 cardBasic.transform.position = vector;
                 cardBasic.transform.rotation = Quaternion.Euler(rotationOnX, 180f, 0f);
                 cardBasic.transform.localScale = new Vector3(2f, 2f, 2f);
-                cardBasic.Init("swsh11_137");
+                cardBasic.Init("swsh11_137");*/
             }
         }
 
@@ -55,8 +55,15 @@ namespace PTCGLDeckTracker
         {
             if (enableDeckTracker)
             {
+                string deckString = player.deck.DeckStringForRender();
+
                 var width = 250;
-                var location = new Rect(Screen.width - width, 0, width, Screen.height);
+                var boxHeight = deckString.Count(s => s == '\n') * 15;
+                if (boxHeight == 0)
+                {
+                    boxHeight = 100;
+                }
+                var location = new Rect(Screen.width - width, 0, width, boxHeight);
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
                 
                 var deckGUIStyle = new GUIStyle();
@@ -64,9 +71,6 @@ namespace PTCGLDeckTracker
                 deckGUIStyle.fontSize = 14;
 
                 GUI.Box(location, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
-
-                string deckString = player.deck.DeckStringForRender();
-
                 GUI.Label(textLocation, deckString, deckGUIStyle);
             }
 
@@ -74,11 +78,11 @@ namespace PTCGLDeckTracker
             {
                 var width = 250;
                 var height = 200;
-                var location = new Rect(0, height, width, 500);
+                var location = new Rect(0, height, width, 250);
 
                 var deckGUIStyle = new GUIStyle();
                 deckGUIStyle.normal.textColor = Color.white;
-                deckGUIStyle.fontSize = 16;
+                deckGUIStyle.fontSize = 14;
 
                 var textLocation = new Rect(5, height + 25, width, 500);
                 GUI.Box(location, "Prize Cards");

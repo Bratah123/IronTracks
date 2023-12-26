@@ -13,12 +13,19 @@ namespace PTCGLDeckTracker.CardCollection
         public string cardID { get; set; }
         public int quantity { get; set; }
         public string englishName { get; set; }
-
         public string setID {  get; set; }
 
         public Card(string cardID)
         {
             this.cardID = cardID;
+        }
+
+        public Card(Card card)
+        {
+            cardID = card.cardID;
+            quantity = card.quantity;
+            englishName = card.englishName;
+            setID = card.setID;
         }
 
         public override string ToString()

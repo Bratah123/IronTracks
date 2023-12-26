@@ -5,7 +5,7 @@ using System.Runtime.InteropServices.ComTypes;
 using MelonLoader;
 using PTCGLDeckTracker; // The namespace of your mod class
 // ...
-[assembly: MelonInfo(typeof(IronTracks), "Iron Tracks", "0.0.1", "Bratah")]
+[assembly: MelonInfo(typeof(IronTracks), "Iron Tracks", "1.0.0", "Bratah")]
 [assembly: MelonGame("pokemon", "Pokemon TCG Live")]
 
 // General Information about an assembly is controlled through the following
