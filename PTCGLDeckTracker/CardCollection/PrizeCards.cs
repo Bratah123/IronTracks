@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MelonLoader;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,23 @@ namespace PTCGLDeckTracker.CardCollection
 {
     internal class PrizeCards : CardCollection
     {
+        public Dictionary<string, Card> knownPrizeCards { get; set; }
+
         public override void OnCardAdded(Card3D cardAdded)
         {
-            throw new System.NotImplementedException();
+            base.OnCardAdded(cardAdded);
+            Melon<IronTracks>.Logger.Msg("Added Card " + cardAdded.name + " into hand.");
         }
 
         public override void OnCardRemoved(Card3D cardRemoved)
         {
-            throw new System.NotImplementedException();
+            base.OnCardRemoved(cardRemoved);
+            Melon<IronTracks>.Logger.Msg("Added Card " + cardRemoved.name + " into hand.");
+        }
+
+        public int GetPrizeCount()
+        {
+            return _cardCount;
         }
     }
 }

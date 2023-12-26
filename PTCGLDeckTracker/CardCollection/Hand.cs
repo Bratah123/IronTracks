@@ -11,11 +11,13 @@ namespace PTCGLDeckTracker.CardCollection
     {
         public override void OnCardAdded(Card3D cardAdded)
         {
+            base.OnCardAdded(cardAdded);
             Melon<IronTracks>.Logger.Msg("Added Card " + cardAdded.name + " into hand.");
         }
 
         public override void OnCardRemoved(Card3D cardRemoved)
         {
+            base.OnCardRemoved(cardRemoved);
             Melon<IronTracks>.Logger.Msg("Removed Card " + cardRemoved.name + " from hand.");
         }
     }

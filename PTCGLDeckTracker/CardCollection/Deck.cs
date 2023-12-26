@@ -7,9 +7,12 @@ namespace PTCGLDeckTracker.CardCollection
     /// <summary>
     /// Deck will automatically assume all 60 cards are present in deck at all times
     /// unless it ABSOLUTELY knows what is prized (via deck search), etc..
+    /// It also handles prize cards deducing.
     /// </summary>
     internal class Deck : CardCollection
     {
+        public PrizeCards prizeCards { get; set; } = new PrizeCards();
+
         private string _deckOwner = "";
 
         /// <summary>
@@ -22,8 +25,6 @@ namespace PTCGLDeckTracker.CardCollection
         /// Transient data that is mutated.
         /// </summary>
         private Dictionary<string, Card> _currentCardsInDeck;
-        private List<string> _knownCards = new List<string>();
-        private int _deckCount = 0;
 
         public Deck(string deckOwner)
         {
@@ -68,14 +69,14 @@ namespace PTCGLDeckTracker.CardCollection
                     continue;
                 }
                 deckString += card.quantity + " " + card;
-                if (totalAssumedCards != _knownCards.Count)
+                if (totalAssumedCards != _cardCount)
                 {
                     deckString += " (?)";
                 }
                 deckString += "\n";
             }
 
-            deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
+            deckString += "\nTotal Cards in Deck: " + _cardCount;
             deckString += "\nTotal ASSUMED Cards in Deck: " + totalAssumedCards;
 
             return deckString;
@@ -116,14 +117,9 @@ namespace PTCGLDeckTracker.CardCollection
             return total;
         }
 
-        public int GetQuantityOfKnownCards()
-        {
-            return _knownCards.Count;
-        }
-
         public int GetTotalQuantityOfCards()
         {
-            return _deckCount;
+            return _cardCount;
         }
 
         public void PopulateDeck(Dictionary<string, int> deck)
@@ -193,7 +189,6 @@ namespace PTCGLDeckTracker.CardCollection
 
         private void AddCardToCurrentDeck(Card3D cardAdded)
         {
-            _deckCount++;
             // Ignore any cards added into our deck that is "unknown"
             // Typically occurs during setting up phase, when the deck is populated with 60 private cards
             if (string.IsNullOrEmpty(cardAdded.entityID) || cardAdded.entityID.Equals("PRIVATE"))
@@ -210,7 +205,6 @@ namespace PTCGLDeckTracker.CardCollection
 
         private void RemoveCardFromCurrentDeck(Card3D cardRemoved)
         {
-            _deckCount--;
             // Ignore any cards removed from our deck that is "unknown"
             // This is where the assumption is made that no cards are prized
             // AFAIK, the only time private cards are removed from the deck is during prizing.
@@ -231,12 +225,14 @@ namespace PTCGLDeckTracker.CardCollection
 
         public override void OnCardAdded(Card3D cardAdded)
         {
+            base.OnCardAdded(cardAdded);
             Melon<IronTracks>.Logger.Msg("Added Card: " + Card.GetEnglishNameFromCard3DName(cardAdded.name) + " into deck.");
             AddCardToCurrentDeck(cardAdded);
         }
 
         public override void OnCardRemoved(Card3D cardRemoved)
         {
+            base.OnCardRemoved(cardRemoved);
             Melon<IronTracks>.Logger.Msg("Removed Card: " + Card.GetEnglishNameFromCard3DName(cardRemoved.name) + " from deck.");
             RemoveCardFromCurrentDeck(cardRemoved);
         }

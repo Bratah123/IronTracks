@@ -14,6 +14,8 @@ namespace PTCGLDeckTracker.CardCollection
         // card_id : quantity
         protected Dictionary<string, int> _cardsWithId = new Dictionary<string, int>();
 
+        protected int _cardCount = 0;
+
         public CardCollection() { }
 
         virtual public void Clear()
@@ -27,13 +29,19 @@ namespace PTCGLDeckTracker.CardCollection
         /// Used by us to keep track internally of cards.
         /// </summary>
         /// <param name="cardID"></param>
-        abstract public void OnCardAdded(Card3D cardAdded);
+        virtual public void OnCardAdded(Card3D cardAdded)
+        {
+            _cardCount++;
+        }
 
         /// <summary>
         /// Called whenever a Card is removed from the physical card collection (hand, discard, deck, etc..) in game.
         /// Used by us to keep track internally of cards.
         /// </summary>
         /// <param name="cardID"></param>
-        abstract public void OnCardRemoved(Card3D cardRemoved);
+        virtual public void OnCardRemoved(Card3D cardRemoved)
+        {
+            _cardCount--;
+        }
     }
 }

@@ -16,14 +16,12 @@ namespace PTCGLDeckTracker
 
         // Card Collections
         public Deck deck { get; set; }
-        public PrizeCards prizeCards { get; set; }
         public DiscardPile discardPile { get; set; }
         public Hand hand { get; set; }
 
         public Player()
         {
             this.deck = new Deck("playerOne");
-            this.prizeCards = new PrizeCards();
             this.discardPile = new DiscardPile();
             this.hand = new Hand();
             this.username = string.Empty;
@@ -39,6 +37,10 @@ namespace PTCGLDeckTracker
             {
                 hand.OnCardAdded(cardAdded);
             }
+            else if (playerCardOwner.GetType() == typeof(PrizeController))
+            {
+                deck.prizeCards.OnCardAdded(cardAdded);
+            }
         }
 
         public void OnRemovedCardFromCollection(Card3D cardRemoved, PlayerCardOwner playerCardOwner)
@@ -51,6 +53,15 @@ namespace PTCGLDeckTracker
             {
                 hand.OnCardRemoved(cardRemoved);
             }
+            else if (playerCardOwner.GetType() == typeof(PrizeController))
+            {
+                deck.prizeCards.OnCardRemoved(cardRemoved);
+            }
+        }
+
+        public PrizeCards GetPrizeCards()
+        {
+            return deck.prizeCards;
         }
     }
 }
