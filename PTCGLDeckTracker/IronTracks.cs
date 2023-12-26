@@ -25,12 +25,12 @@ namespace PTCGLDeckTracker
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 enableDeckTracker = !enableDeckTracker;
-                LoggerInstance.Msg("Toggled deck tracker: " + enableDeckTracker.ToString());
+                LoggerInstance.Msg("Toggled Deck Tracker: " + enableDeckTracker.ToString());
             }
             else if (Input.GetKeyDown(KeyCode.X))
             {
                 enablePrizeCards = !enablePrizeCards;
-                LoggerInstance.Msg("Toggled Opponent Deck Tracker: " + enablePrizeCards.ToString());
+                LoggerInstance.Msg("Toggled Prize Tracker: " + enablePrizeCards.ToString());
             }
             else if (Input.GetKeyDown(KeyCode.C) && SceneManager.GetActiveScene().name == GAME_SCENE_NAME)
             {
@@ -58,20 +58,31 @@ namespace PTCGLDeckTracker
                 var width = 250;
                 var location = new Rect(Screen.width - width, 0, width, Screen.height);
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
+                
+                var deckGUIStyle = new GUIStyle();
+                deckGUIStyle.normal.textColor = Color.white;
+                deckGUIStyle.fontSize = 14;
+
                 GUI.Box(location, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
 
                 string deckString = player.deck.DeckStringForRender();
 
-                GUI.Label(textLocation, deckString);
+                GUI.Label(textLocation, deckString, deckGUIStyle);
             }
 
             if (enablePrizeCards)
             {
                 var width = 250;
-                var height = 225;
-                var location = new Rect(0, 225, width, 500);
+                var height = 200;
+                var location = new Rect(0, height, width, 500);
+
+                var deckGUIStyle = new GUIStyle();
+                deckGUIStyle.normal.textColor = Color.white;
+                deckGUIStyle.fontSize = 16;
+
                 var textLocation = new Rect(5, height + 25, width, 500);
                 GUI.Box(location, "Prize Cards");
+                GUI.Label(location, "", deckGUIStyle);
             }
         }
 

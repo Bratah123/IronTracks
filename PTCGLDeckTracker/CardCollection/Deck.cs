@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 namespace PTCGLDeckTracker.CardCollection
 {
+    /// <summary>
+    /// Deck will automatically assume all 60 cards are present in deck at all times
+    /// unless it ABSOLUTELY knows what is prized (via deck search), etc..
+    /// </summary>
     internal class Deck : CardCollection
     {
         private string _deckOwner = "";
@@ -13,16 +17,17 @@ namespace PTCGLDeckTracker.CardCollection
         /// This list should never be mutated.
         /// </summary>
         List<string> deckRenderOrder = new List<string>();
-        private List<string> _knownCards = new List<string>();
         /// <summary>
         /// This dictionary keeps track of the current expected cards in deck
         /// Transient data that is mutated.
         /// </summary>
-        private Dictionary<string, Card> _currentCardsInDeck = new Dictionary<string, Card>();
+        private Dictionary<string, Card> _currentCardsInDeck;
+        private List<string> _knownCards = new List<string>();
+        private int _deckCount = 0;
 
         public Deck(string deckOwner)
         {
-            this._deckOwner = deckOwner.Trim();
+            _deckOwner = deckOwner.Trim();
         }
 
         override public void Clear()
@@ -50,15 +55,28 @@ namespace PTCGLDeckTracker.CardCollection
                 return deckString;
             }
 
+            int totalAssumedCards = GetAssumedTotalQuantityOfCards();
+
             foreach (var cardID in deckRenderOrder) {
-                if (_cards[cardID] == null)
+                if (!_currentCardsInDeck.ContainsKey(cardID))
                 {
                     continue;
                 }
-                deckString += _cards[cardID].quantity + " " + _cards[cardID] + "\n";
+                Card card = _currentCardsInDeck[cardID];
+                if (card.quantity == 0)
+                {
+                    continue;
+                }
+                deckString += card.quantity + " " + card;
+                if (totalAssumedCards != _knownCards.Count)
+                {
+                    deckString += " (?)";
+                }
+                deckString += "\n";
             }
 
             deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
+            deckString += "\nTotal ASSUMED Cards in Deck: " + totalAssumedCards;
 
             return deckString;
         }
@@ -83,18 +101,29 @@ namespace PTCGLDeckTracker.CardCollection
             }
 
             deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
+            deckString += "\nTotal ASSUMED Cards in Deck: " + GetAssumedTotalQuantityOfCards();
 
             return deckString;
         }
 
-        public int GetTotalQuantityOfCards()
+        public int GetAssumedTotalQuantityOfCards()
         {
             int total = 0;
-            foreach (KeyValuePair<string, Card> kvp in _cards)
+            foreach (KeyValuePair<string, Card> kvp in _currentCardsInDeck)
             {
                 total += kvp.Value.quantity;
             }
             return total;
+        }
+
+        public int GetQuantityOfKnownCards()
+        {
+            return _knownCards.Count;
+        }
+
+        public int GetTotalQuantityOfCards()
+        {
+            return _deckCount;
         }
 
         public void PopulateDeck(Dictionary<string, int> deck)
@@ -146,6 +175,7 @@ namespace PTCGLDeckTracker.CardCollection
             {
                 deckRenderOrder.Add(item);
             }
+            _currentCardsInDeck = new Dictionary<string, Card>(_cards);
         }
 
         private void UpdateCardQuantityInDeck(string cardID, int quantity)
@@ -161,70 +191,40 @@ namespace PTCGLDeckTracker.CardCollection
             }
         }
 
-        private void DecrementCardQuantity(string cardID)
-        {
-            foreach (var kvp in _cards)
-            {
-                Card card = kvp.Value;
-                if (card.cardID == cardID)
-                {
-                    if (card.quantity > 0)
-                    {
-                        card.quantity--;
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void IncrementCardQuantity(string cardID)
-        {
-            foreach (var kvp in _cards)
-            {
-                Card card = kvp.Value;
-                if (card.cardID == cardID)
-                {
-                    if (card.quantity > 0)
-                    {
-                        card.quantity++;
-                    }
-                    break;
-                }
-            }
-        }
-
         private void AddCardToCurrentDeck(Card3D cardAdded)
         {
-            var currentCardInDeck = _currentCardsInDeck[cardAdded.cardSourceID];
-            if (currentCardInDeck == null) // If the card didn't already exist in the deck
+            _deckCount++;
+            // Ignore any cards added into our deck that is "unknown"
+            // Typically occurs during setting up phase, when the deck is populated with 60 private cards
+            if (string.IsNullOrEmpty(cardAdded.entityID) || cardAdded.entityID.Equals("PRIVATE"))
             {
-                // cardAdded.cardSourceID could be "", an empty string if the card is a PRIVATE card
-                // TCPI does this to indicate when a card is not yet "known" from a player.
-                var cardToAdd = new Card(cardAdded.cardSourceID);
-                cardToAdd.quantity = 1;
-                cardToAdd.englishName = Card.GetEnglishNameFromCard3DName(cardAdded.name);
-                _currentCardsInDeck[cardAdded.cardSourceID] = cardToAdd;
+                return;
             }
-            else
+
+            if (!string.IsNullOrEmpty(cardAdded.cardSourceID))
             {
-                currentCardInDeck.quantity++;
+                var cardInDeck = _currentCardsInDeck[cardAdded.cardSourceID];
+                cardInDeck.quantity++;
             }
         }
 
         private void RemoveCardFromCurrentDeck(Card3D cardRemoved)
         {
-            var currentCardInDeck = _currentCardsInDeck[cardRemoved.cardSourceID];
-            if (currentCardInDeck != null)
+            _deckCount--;
+            // Ignore any cards removed from our deck that is "unknown"
+            // This is where the assumption is made that no cards are prized
+            // AFAIK, the only time private cards are removed from the deck is during prizing.
+            if (string.IsNullOrEmpty(cardRemoved.entityID) || cardRemoved.entityID.Equals("PRIVATE"))
             {
-                if (currentCardInDeck.quantity > 0)
+                return;
+            }
+            // We assume the deck already contains the keys to every card, so no need for null checks
+            if (!string.IsNullOrEmpty(cardRemoved.cardSourceID))
+            {
+                var cardInDeck = _currentCardsInDeck[cardRemoved.cardSourceID];
+                if (cardInDeck.quantity > 0)
                 {
-                    currentCardInDeck.quantity--;
-                }
-
-                // If the quantity reaches 0 after being removed, delete it from the dictionary
-                if (currentCardInDeck.quantity == 0)
-                {
-                    _currentCardsInDeck.Remove(cardRemoved.cardSourceID);
+                    cardInDeck.quantity--;
                 }
             }
         }
@@ -238,6 +238,7 @@ namespace PTCGLDeckTracker.CardCollection
         public override void OnCardRemoved(Card3D cardRemoved)
         {
             Melon<IronTracks>.Logger.Msg("Removed Card: " + Card.GetEnglishNameFromCard3DName(cardRemoved.name) + " from deck.");
+            RemoveCardFromCurrentDeck(cardRemoved);
         }
     }
 }
