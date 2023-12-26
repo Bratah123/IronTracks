@@ -58,9 +58,9 @@ namespace PTCGLDeckTracker
                 var width = 250;
                 var location = new Rect(Screen.width - width, 0, width, Screen.height);
                 var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
-                GUI.Box(location, "Deck " + "(" + player.GetDeck().GetDeckOwner() + ")");
+                GUI.Box(location, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
 
-                string deckString = player.GetDeck().DeckStringForRender();
+                string deckString = player.deck.DeckStringForRender();
 
                 GUI.Label(textLocation, deckString);
             }
@@ -87,52 +87,47 @@ namespace PTCGLDeckTracker
                 // This could prove to be problematic for many reasons I won't get into.
                 var playerTwoName = game.players[1].playerName;
 
-                player.GetDeck().SetDeckOwner(playerOneName);
+                player.deck.SetDeckOwner(playerOneName);
 
                 Melon<IronTracks>.Logger.Msg(playerOneName + " vs. " + playerTwoName);
 
-                player.GetDeck().PopulateDeck(game.players[0].deckInfo.cards);
+                player.deck.PopulateDeck(game.players[0].deckInfo.cards);
             }
         }
 
-        [HarmonyLib.HarmonyPatch(typeof(DeckController), "ProcessCardGainedResult")]
+        [HarmonyLib.HarmonyPatch(typeof(CardSetOwner), "ProcessCardGainedResult")]
         class ProcessCardGainedPatch
         {
-            static void Postfix(DeckController __instance, OwnerData data, bool gainedFromDrop)
+            static void Postfix(CardSetOwner __instance, OwnerData data, bool gainedFromDrop)
             {
                 if (!__instance)
                 {
                     return;
                 }
-                if (__instance.GetType() == typeof(DeckController))
+                // Make sure that we are targetting the local player (ourself)
+                if (__instance.playerID != PlayerID.LOCAL)
                 {
-                    // Make sure that we are targetting the local player (ourself)
-                    if (__instance.playerID != PlayerID.LOCAL)
-                    {
-                        return;
-                    }
-                    Melon<IronTracks>.Logger.Msg("Added Card " + data.card.name + " back into deck.");
+                    return;
                 }
+                player.OnGainCardIntoCollection(data.card, __instance);
             }
         }
 
-        [HarmonyLib.HarmonyPatch(typeof(DeckController), "ProcessCardRemovalResult")]
+        [HarmonyLib.HarmonyPatch(typeof(CardSetOwner), "ProcessCardRemovalResult")]
         class ProcessCardRemovalResultPatch
         {
-            static void Postfix(DeckController __instance, OwnerData data, bool droppingCard)
+            static void Postfix(CardSetOwner __instance, OwnerData data, bool droppingCard)
             {
                 if (!__instance)
                 {
                     return;
                 }
-                if (__instance.GetType() == typeof(DeckController))
+                // Make sure that we are targetting the local player (ourself)
+                if (__instance.playerID != PlayerID.LOCAL)
                 {
-                    if (__instance.playerID != PlayerID.LOCAL)
-                    {
-                        return;
-                    }
-                    Melon<IronTracks>.Logger.Msg("Removed Card from DeckController: " + data.card.name);
+                    return;
                 }
+                player.OnRemovedCardFromCollection(data.card, __instance);
             }
         }
     }
