@@ -1,6 +1,6 @@
 # Iron Tracks
 Iron Tracks is a deck tracker for the Pokemon Trading Card Game Live, whose goal is to allow players to easily keep track of their deck resources in-game with live UI.
-Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the game.
+Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the game. Don't waste time taking notes of what's prized, and being able to have complete knowledge of your deck resources without the need for external notes!
 **Please Read Disclaimer** about Iron Tracks below!!
 
 # Installation
