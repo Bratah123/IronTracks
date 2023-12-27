@@ -1,6 +1,6 @@
 # Iron Tracks
 Iron Tracks is a deck tracker for the Pokemon Trading Card Game Live, whose goal is to allow players to easily keep track of their deck resources in-game with live UI.
-Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the game.
+Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the game. Don't waste time taking notes of what's prized, and being able to have complete knowledge of your deck resources without the need for external notes!
 **Please Read Disclaimer** about Iron Tracks below!!
 
 # Installation
@@ -8,6 +8,17 @@ Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the ga
 2. Download the latest verison zip in the Release Page.
 3. Unzip all the contents into your PTCGL's client's folder.
 4. Press Z in-game to toggle the Deck Tracker UI
+
+# Controls
+- Press Z to enable the Deck Tracker
+- Press X to enable the Prize Tracker
+
+# Gallery
+![Pre Deck Search](https://github.com/Bratah123/IronTracks/assets/58405975/0b6e2704-aedb-479f-b735-dcf4382e95c7)
+![Post Deck Search](https://github.com/Bratah123/IronTracks/assets/58405975/56a0d6b8-02cd-4521-a57e-29ca76cecf30)
+
+# Developer Notes
+The only valid Melon Loader version for the current PTCGL is v0.5.7
 
 # Disclaimer
 Iron Tracks is an open-source Unity Mod that modifies the PTCGL client's game, and serves them to end users as a fully functional deck tracker. Iron Tracks is an educational project for demonstrating various techniques, such as reverse engineering and game modding.
