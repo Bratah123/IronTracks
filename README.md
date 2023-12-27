@@ -13,6 +13,11 @@ Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the ga
 - Press Z to enable the Deck Tracker
 - Press X to enable the Prize Tracker
 
+# Gallery
+![Pre Deck Search](https://github.com/Bratah123/IronTracks/assets/58405975/0b6e2704-aedb-479f-b735-dcf4382e95c7)
+![Post Deck Search](https://github.com/Bratah123/IronTracks/assets/58405975/56a0d6b8-02cd-4521-a57e-29ca76cecf30)
+
+
 # Disclaimer
 Iron Tracks is an open-source Unity Mod that modifies the PTCGL client's game, and serves them to end users as a fully functional deck tracker. Iron Tracks is an educational project for demonstrating various techniques, such as reverse engineering and game modding.
 The creators of Iron Tracks urge users and end users of the project, and/or any derivatives of Iron Tracks, to support the creators of PTCGL by purchasing/utilizing their original works, merchandise through official channels. In no way is Iron Tracks trying to provide an unfair advantage to users of the mod, as all game knowledge and data is already known information within the game state. Iron Tracks is non-monetised, and provided as is. Every reasonable effort has been taken to ensure correctness and reliability of Iron Tracks. We will not be liable for any special, direct, indirect, or consequential damages or any damages whatsoever resulting from loss of use, data or profits, whether in an action if contract, negligence or other tortious action, arising out of or in connection with the use of Iron Tracks (in part or in whole).
