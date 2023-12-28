@@ -1,4 +1,4 @@
-![image](https://github.com/Bratah123/IronTracks/assets/58405975/1dc1480f-e8c4-49ec-8975-2df0787a78eb)# Iron Tracks
+# Iron Tracks
 Iron Tracks is a deck tracker for the Pokemon Trading Card Game Live, whose goal is to allow players to easily keep track of their deck resources in-game with live UI.
 Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the game. Don't waste time taking notes of what's prized, and being able to have complete knowledge of your deck resources without the need for external notes!
 **Please Read Disclaimer** about Iron Tracks below!!
@@ -21,7 +21,7 @@ Iron Tracks is a Unity Mod using MelonLoader API to load the modules into the ga
 - Q: My MelonLoader isn't loading your mod correctly, how do I fix this?
 - A: The only valid Melon Loader version for the current PTCGL is v0.5.7
 - Q: I'm getting error `Failed to Open Mono Assembly`
-- ![image](https://github.com/Bratah123/IronTracks/assets/58405975/165a0838-21e5-45f9-b255-588e24b1a493)
+![image](https://github.com/Bratah123/IronTracks/assets/58405975/165a0838-21e5-45f9-b255-588e24b1a493)
 - A: This error is caused by the MelonLoader programing being unable to read the `é` in the Pokémon. This can be fixed by changing your PTCGL client's folder to something else I.E. `PTCGL`
 
 # Disclaimer
