@@ -14,6 +14,14 @@ namespace PTCGLDeckTracker.CardCollection
         // These are the prize cards users have already taken
         public Dictionary<string, Card> RemovedPrizedCards { get; set; } = new Dictionary<string, Card>();
 
+
+        override public void Clear()
+        {
+            base.Clear();
+            KnownPrizeCards.Clear();
+            RemovedPrizedCards.Clear();
+        }
+
         public override void OnCardAdded(Card3D cardAdded)
         {
             base.OnCardAdded(cardAdded);

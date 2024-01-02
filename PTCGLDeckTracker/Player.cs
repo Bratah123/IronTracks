@@ -63,5 +63,10 @@ namespace PTCGLDeckTracker
         {
             return deck.prizeCards;
         }
+
+        public void ClearCollections()
+        {
+            deck.Clear();
+        }
     }
 }

@@ -35,6 +35,7 @@ namespace PTCGLDeckTracker.CardCollection
         {
             base.Clear();
             deckRenderOrder.Clear();
+            prizeCards.Clear();
         }
 
         public string GetDeckOwner()
