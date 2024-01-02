@@ -95,7 +95,17 @@ namespace PTCGLDeckTracker
         {
             static void Prefix(MatchManager __instance, NetworkMatchController.MatchDetails game)
             {
-                var playerOneName = game.players[0].playerName;
+                var assumedLocalPlayer = game.players[0];
+                var playerName = assumedLocalPlayer.playerName;
+
+                if (playerName != NetworkMatchController.GetPlayerName(PlayerID.LOCAL))
+                {
+                    // Swap to the other player if this isn't our own player name.
+                    assumedLocalPlayer = game.players[1];
+                    Melon<IronTracks>.Logger.Msg("Player mismatch detected");
+                }
+
+                var playerOneName = assumedLocalPlayer.playerName;
 
                 player.username = playerOneName;
 
@@ -107,7 +117,7 @@ namespace PTCGLDeckTracker
 
                 Melon<IronTracks>.Logger.Msg(playerOneName + " vs. " + playerTwoName);
 
-                player.deck.PopulateDeck(game.players[0].deckInfo.cards);
+                player.deck.PopulateDeck(assumedLocalPlayer.deckInfo.cards);
             }
         }
 
