@@ -22,6 +22,7 @@ namespace PTCGLDeckTracker.CardCollection
         {
             _cards.Clear();
             _cardsWithId.Clear();
+            _cardCount = 0;
         }
 
         /// <summary>
