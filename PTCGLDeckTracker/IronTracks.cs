@@ -10,6 +10,7 @@ using MelonLoader;
 using RainierClientSDK;
 using UnityEngine.SceneManagement;
 using PTCGLDeckTracker.CardCollection;
+using TPCI.Rainier.Match.Cards.Ownership;
 
 namespace PTCGLDeckTracker
 {

@@ -1,6 +1,7 @@
 ﻿using Harmony;
 using MelonLoader;
 using System.Collections.Generic;
+using TPCI.Rainier.Match.Cards;
 
 namespace PTCGLDeckTracker.CardCollection
 {
