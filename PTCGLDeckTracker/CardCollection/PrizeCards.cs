@@ -1,20 +1,18 @@
-﻿using MelonLoader;
+using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TPCI.Rainier.Match.Cards;
+using UnityEngine;
 
 namespace PTCGLDeckTracker.CardCollection
 {
     internal class PrizeCards : CardCollection
     {
-        public Dictionary<string, Card> KnownPrizeCards { get; set; } = new Dictionary<string, Card>();
-
-        // These are the prize cards users have already taken
-        public Dictionary<string, Card> RemovedPrizedCards { get; set; } = new Dictionary<string, Card>();
-
+        public Dictionary<string, TrackedCard> KnownPrizeCards { get; set; } = new Dictionary<string, TrackedCard>();
+        public Dictionary<string, TrackedCard> RemovedPrizedCards { get; set; } = new Dictionary<string, TrackedCard>();
 
         override public void Clear()
         {
@@ -27,13 +25,11 @@ namespace PTCGLDeckTracker.CardCollection
         {
             base.OnCardAdded(cardAdded);
             Melon<IronTracks>.Logger.Msg("Added Card " + cardAdded.name + " into Prize Cards.");
-            // Ignore if the card is unknown
             if (string.IsNullOrEmpty(cardAdded.entityID) || cardAdded.entityID.Equals("PRIVATE"))
             {
                 return;
             }
-            // If the card is seen by the player but not already marked as seen (Hisuian Heavy Ball, Peonia) internally
-            // Add that to KnownPrizeCards
+
             if (!KnownPrizeCards.ContainsKey(cardAdded.cardSourceID))
             {
                 var card = new Card(cardAdded.cardSourceID)
@@ -41,16 +37,22 @@ namespace PTCGLDeckTracker.CardCollection
                     quantity = 1,
                     englishName = Card.GetEnglishNameFromCard3DName(cardAdded.name)
                 };
-                KnownPrizeCards.Add(cardAdded.cardSourceID, card);
+                var trackedCard = new TrackedCard(card);
+                trackedCard.highlightState = HighlightState.Added;
+                trackedCard.highlightEndTime = Time.time + 2.0f;
+                KnownPrizeCards.Add(cardAdded.cardSourceID, trackedCard);
             }
             else
             {
-                KnownPrizeCards[cardAdded.cardSourceID].quantity++;
+                var trackedCard = KnownPrizeCards[cardAdded.cardSourceID];
+                trackedCard.card.quantity++;
+                trackedCard.highlightState = HighlightState.Added;
+                trackedCard.highlightEndTime = Time.time + 2.0f;
             }
-            // Check to see if it exists in RemovedPrizeCards and update dictionary accordingly
+
             if (RemovedPrizedCards.ContainsKey(cardAdded.cardSourceID))
             {
-                RemovedPrizedCards[cardAdded.cardSourceID].quantity--;
+                RemovedPrizedCards[cardAdded.cardSourceID].card.quantity--;
             }
         }
 
@@ -58,22 +60,22 @@ namespace PTCGLDeckTracker.CardCollection
         {
             base.OnCardRemoved(cardRemoved);
             Melon<IronTracks>.Logger.Msg("Added Card " + cardRemoved.name + " into hand.");
-            // Ignore if the card is unknown (this technically shouldn't be possible AFAIK)
             if (string.IsNullOrEmpty(cardRemoved.entityID) || cardRemoved.entityID.Equals("PRIVATE"))
             {
                 return;
             }
             if (KnownPrizeCards.ContainsKey(cardRemoved.cardSourceID))
             {
-                KnownPrizeCards[cardRemoved.cardSourceID].quantity--;
+                var trackedCard = KnownPrizeCards[cardRemoved.cardSourceID];
+                trackedCard.card.quantity--;
+                trackedCard.highlightState = HighlightState.Removed;
+                trackedCard.highlightEndTime = Time.time + 2.0f;
             }
             else
             {
-                // If KnownPrizeCards does not contain the card removed
-                // Then the user took prize cards without ever deck searching
                 if (RemovedPrizedCards.ContainsKey(cardRemoved.cardSourceID))
                 {
-                    RemovedPrizedCards[cardRemoved.cardSourceID].quantity++;
+                    RemovedPrizedCards[cardRemoved.cardSourceID].card.quantity++;
                 }
                 else
                 {
@@ -82,7 +84,7 @@ namespace PTCGLDeckTracker.CardCollection
                         quantity = 1,
                         englishName = Card.GetEnglishNameFromCard3DName(cardRemoved.name)
                     };
-                    RemovedPrizedCards.Add(cardRemoved.cardSourceID, card);
+                    RemovedPrizedCards.Add(cardRemoved.cardSourceID, new TrackedCard(card));
                 }
             }
         }
@@ -97,7 +99,7 @@ namespace PTCGLDeckTracker.CardCollection
             int total = 0;
             foreach (var kvp in RemovedPrizedCards)
             {
-                total += kvp.Value.quantity;
+                total += kvp.Value.card.quantity;
             }
             return total;
         }
@@ -107,29 +109,24 @@ namespace PTCGLDeckTracker.CardCollection
             int total = 0;
             foreach (var kvp in KnownPrizeCards)
             {
-                total += kvp.Value.quantity;
+                total += kvp.Value.card.quantity;
             }
             return total;
         }
 
-        public string PrizeCardStringForRender()
+        public List<TrackedCard> GetCardsForRender()
         {
-            var renderString = "";
-            if (GetKnownPrizeCardsCount() == 0)
-            {
-                return renderString;
-            }
+            var cards = new List<TrackedCard>();
             foreach (var kvp in KnownPrizeCards)
             {
                 var card = kvp.Value;
-                if (card.quantity == 0)
+                if (card.card.quantity == 0)
                 {
                     continue;
                 }
-                renderString += card.quantity + " " + card + "\n";
+                cards.Add(card);
             }
-            renderString += "\nTotal Prize Cards: " + _cardCount;
-            return renderString;
+            return cards;
         }
     }
 }

@@ -20,6 +20,10 @@ namespace PTCGLDeckTracker
         bool enablePrizeCards = false;
         static Player player = new Player();
         const String GAME_SCENE_NAME = "Match_Landscape";
+        const float HighlightDuration = 2.0f;
+
+        private Rect _deckTrackerWindowRect = new Rect(Screen.width - 250, 0, 250, 100);
+        private Rect _prizeCardsWindowRect = new Rect(0, 200, 250, 100);
 
         public override void OnUpdate()
         {
@@ -56,38 +60,144 @@ namespace PTCGLDeckTracker
         {
             if (enableDeckTracker)
             {
-                string deckString = player.deck.DeckStringForRender();
-
-                var width = 250;
-                var boxHeight = deckString.Count(s => s == '\n') * 20;
-                if (boxHeight == 0)
-                {
-                    boxHeight = 100;
-                }
-                var location = new Rect(Screen.width - width, 0, width, boxHeight);
-                var textLocation = new Rect(Screen.width - width + 5, 25, width, Screen.height);
-                
-                var deckGUIStyle = new GUIStyle();
-                deckGUIStyle.normal.textColor = Color.white;
-                deckGUIStyle.fontSize = 15;
-
-                GUI.Box(location, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
-                GUI.Label(textLocation, deckString, deckGUIStyle);
+                _deckTrackerWindowRect = GUI.Window(0, _deckTrackerWindowRect, DrawDeckTrackerWindow, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
             }
 
             if (enablePrizeCards)
             {
-                var width = 250;
-                var height = 200;
-                var location = new Rect(0, height, width, 250);
+                _prizeCardsWindowRect = GUI.Window(1, _prizeCardsWindowRect, DrawPrizeCardsWindow, "Prize Cards");
+            }
+        }
 
+        void DrawDeckTrackerWindow(int windowID)
+        {
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+
+            var cards = player.deck.GetCardsForRender();
+            // Add 2 for the counters, plus a little extra for spacing
+            var boxHeight = (cards.Count + 3) * 20;
+            if (boxHeight == 0)
+            {
+                boxHeight = 100;
+            }
+            _deckTrackerWindowRect.height = boxHeight + 60; // Adjust height dynamically + padding
+
+            var totalAssumedCards = player.deck.GetAssumedTotalQuantityOfCards();
+            var totalActualCards = player.deck.GetTotalQuantityOfCards();
+            var isUncertain = totalAssumedCards != totalActualCards;
+
+            var yOffset = 25;
+            foreach (var card in cards)
+            {
                 var deckGUIStyle = new GUIStyle();
-                deckGUIStyle.normal.textColor = Color.white;
                 deckGUIStyle.fontSize = 15;
+                deckGUIStyle.padding = new RectOffset(5, 5, 5, 5);
 
-                var textLocation = new Rect(5, height + 25, width, 500);
-                GUI.Box(location, "Prize Cards");
-                GUI.Label(textLocation, player.GetPrizeCards().PrizeCardStringForRender(), deckGUIStyle);
+                if (card.highlightState != HighlightState.None)
+                {
+                    if (Time.time >= card.highlightEndTime)
+                    {
+                        card.highlightState = HighlightState.None;
+                        deckGUIStyle.normal.textColor = Color.white;
+                    }
+                    else
+                    {
+                        Color highlightColor = GetHighlightColor(card.highlightState);
+                        float elapsedTime = Time.time - (card.highlightEndTime - HighlightDuration);
+                        float t = elapsedTime / HighlightDuration;
+                        deckGUIStyle.normal.textColor = Color.Lerp(highlightColor, Color.white, t);
+                    }
+                }
+                else
+                {
+                    deckGUIStyle.normal.textColor = Color.white;
+                }
+
+                string cardText = card.card.quantity + " " + card.card.englishName;
+                if (isUncertain)
+                {
+                    cardText += " (?)";
+                }
+                GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), cardText, deckGUIStyle);
+                yOffset += 20;
+            }
+
+            // Add the counters back
+            var counterGUIStyle = new GUIStyle();
+            counterGUIStyle.fontSize = 15;
+            counterGUIStyle.padding = new RectOffset(5, 5, 5, 5);
+            counterGUIStyle.normal.textColor = Color.white;
+
+            yOffset += 20; // Add some space
+            GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), "Total Cards in Deck: " + totalActualCards, counterGUIStyle);
+            yOffset += 20;
+            GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), "Total ASSUMED Cards in Deck: " + totalAssumedCards, counterGUIStyle);
+        }
+
+        void DrawPrizeCardsWindow(int windowID)
+        {
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+
+            var cards = player.GetPrizeCards().GetCardsForRender();
+            // Add 1 for the counter, plus a little extra for spacing
+            var boxHeight = (cards.Count + 2) * 20;
+            if (boxHeight == 0)
+            {
+                boxHeight = 100;
+            }
+            _prizeCardsWindowRect.height = boxHeight + 60; // Adjust height dynamically + padding
+
+            var yOffset = 25;
+            foreach (var card in cards)
+            {
+                var deckGUIStyle = new GUIStyle();
+                deckGUIStyle.fontSize = 15;
+                deckGUIStyle.padding = new RectOffset(5, 5, 5, 5);
+
+                if (card.highlightState != HighlightState.None)
+                {
+                    if (Time.time >= card.highlightEndTime)
+                    {
+                        card.highlightState = HighlightState.None;
+                        deckGUIStyle.normal.textColor = Color.white;
+                    }
+                    else
+                    {
+                        Color highlightColor = GetHighlightColor(card.highlightState);
+                        float elapsedTime = Time.time - (card.highlightEndTime - HighlightDuration);
+                        float t = elapsedTime / HighlightDuration;
+                        deckGUIStyle.normal.textColor = Color.Lerp(highlightColor, Color.white, t);
+                    }
+                }
+                else
+                {
+                    deckGUIStyle.normal.textColor = Color.white;
+                }
+
+                GUI.Label(new Rect(5, yOffset, _prizeCardsWindowRect.width - 10, 20), card.card.quantity + " " + card.card.englishName, deckGUIStyle);
+                yOffset += 20;
+            }
+
+            // Add the counter back
+            var counterGUIStyle = new GUIStyle();
+            counterGUIStyle.fontSize = 15;
+            counterGUIStyle.padding = new RectOffset(5, 5, 5, 5);
+            counterGUIStyle.normal.textColor = Color.white;
+
+            yOffset += 20; // Add some space
+            GUI.Label(new Rect(5, yOffset, _prizeCardsWindowRect.width - 10, 20), "Total Prize Cards: " + player.GetPrizeCards().GetPrizeCount(), counterGUIStyle);
+        }
+
+        private Color GetHighlightColor(HighlightState state)
+        {
+            switch (state)
+            {
+                case HighlightState.Added:
+                    return Color.green;
+                case HighlightState.Removed:
+                    return Color.red;
+                default:
+                    return Color.white;
             }
         }
 

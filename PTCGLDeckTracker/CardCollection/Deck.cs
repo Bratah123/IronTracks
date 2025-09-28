@@ -1,31 +1,20 @@
-﻿using Harmony;
+using Harmony;
 using MelonLoader;
 using System.Collections.Generic;
+using System.Linq;
 using TPCI.Rainier.Match.Cards;
+using UnityEngine;
 
 namespace PTCGLDeckTracker.CardCollection
 {
-    /// <summary>
-    /// Deck will automatically assume all 60 cards are present in deck at all times
-    /// unless it ABSOLUTELY knows what is prized (via deck search), etc..
-    /// It also handles prize cards deducing.
-    /// </summary>
     internal class Deck : CardCollection
     {
         public PrizeCards prizeCards { get; set; } = new PrizeCards();
 
         private string _deckOwner = "";
 
-        /// <summary>
-        /// deckRenderOrder lets us know in what order the cards should be rendered in a list.
-        /// This list should never be mutated.
-        /// </summary>
         List<string> deckRenderOrder = new List<string>();
-        /// <summary>
-        /// This dictionary keeps track of the current expected cards in deck
-        /// Transient data that is mutated.
-        /// </summary>
-        private Dictionary<string, Card> _currentCardsInDeck;
+        private Dictionary<string, TrackedCard> _currentCardsInDeck;
 
         public Deck(string deckOwner)
         {
@@ -49,72 +38,31 @@ namespace PTCGLDeckTracker.CardCollection
             this._deckOwner = deckOwner;
         }
 
-        public string DeckStringForRender()
+        public List<TrackedCard> GetCardsForRender()
         {
-            string deckString = "";
-
-            if (_cardsWithId.Count == 0)
+            var cards = new List<TrackedCard>();
+            foreach (var cardID in deckRenderOrder)
             {
-                return deckString;
-            }
-
-            int totalAssumedCards = GetAssumedTotalQuantityOfCards();
-
-            foreach (var cardID in deckRenderOrder) {
                 if (!_currentCardsInDeck.ContainsKey(cardID))
                 {
                     continue;
                 }
-                Card card = _currentCardsInDeck[cardID];
-                if (card.quantity == 0)
+                TrackedCard card = _currentCardsInDeck[cardID];
+                if (card.card.quantity == 0)
                 {
                     continue;
                 }
-                deckString += card.quantity + " " + card;
-                if (totalAssumedCards != _cardCount)
-                {
-                    deckString += " (?)";
-                }
-                deckString += "\n";
+                cards.Add(card);
             }
-
-            deckString += "\nTotal Cards in Deck: " + _cardCount;
-            deckString += "\nTotal ASSUMED Cards in Deck: " + totalAssumedCards;
-
-            return deckString;
-        }
-
-        /// <summary>
-        /// For debug purposes, this will return a string that contains the decklist
-        /// but instead of english card names, it's their PTCGL card ids.
-        /// </summary>
-        /// <returns>String</returns>
-        public string DeckStringWithIds()
-        {
-            string deckString = "";
-
-            if (_cardsWithId.Count == 0)
-            {
-                return deckString;
-            }
-
-            foreach (var kvp in _cardsWithId)
-            {
-                deckString += kvp.Value + " " + kvp.Key + "\n";
-            }
-
-            deckString += "\nTotal Cards in Deck: " + GetTotalQuantityOfCards();
-            deckString += "\nTotal ASSUMED Cards in Deck: " + GetAssumedTotalQuantityOfCards();
-
-            return deckString;
+            return cards;
         }
 
         public int GetAssumedTotalQuantityOfCards()
         {
             int total = 0;
-            foreach (KeyValuePair<string, Card> kvp in _currentCardsInDeck)
+            foreach (KeyValuePair<string, TrackedCard> kvp in _currentCardsInDeck)
             {
-                total += kvp.Value.quantity;
+                total += kvp.Value.card.quantity;
             }
             return total;
         }
@@ -144,7 +92,7 @@ namespace PTCGLDeckTracker.CardCollection
                 card.englishName = cdr.EnglishCardName;
                 card.setID = cdr.CardSetID;
 
-                _cards[cardID] = card;
+                _cards[cardID] = new TrackedCard(card);
                 _cardsWithId[cardID] = quantity;
 
                 if (cdr.IsPokemonCard())
@@ -173,26 +121,11 @@ namespace PTCGLDeckTracker.CardCollection
             {
                 deckRenderOrder.Add(item);
             }
-            _currentCardsInDeck = new Dictionary<string, Card>(_cards);
-        }
-
-        private void UpdateCardQuantityInDeck(string cardID, int quantity)
-        {
-            foreach (var kvp in _cards)
-            {
-                Card card = kvp.Value;
-                if (card.cardID == cardID)
-                {
-                   card.quantity = quantity;
-                   break;
-                }
-            }
+            _currentCardsInDeck = _cards.ToDictionary(entry => entry.Key, entry => new TrackedCard(entry.Value));
         }
 
         private void AddCardToCurrentDeck(Card3D cardAdded)
         {
-            // Ignore any cards added into our deck that is "unknown"
-            // Typically occurs during setting up phase, when the deck is populated with 60 private cards
             if (string.IsNullOrEmpty(cardAdded.entityID) || cardAdded.entityID.Equals("PRIVATE"))
             {
                 return;
@@ -200,67 +133,60 @@ namespace PTCGLDeckTracker.CardCollection
 
             if (!string.IsNullOrEmpty(cardAdded.cardSourceID))
             {
-                var cardInDeck = _currentCardsInDeck[cardAdded.cardSourceID];
-                cardInDeck.quantity++;
+                var trackedCard = _currentCardsInDeck[cardAdded.cardSourceID];
+                trackedCard.card.quantity++;
+                trackedCard.highlightState = HighlightState.Added;
+                trackedCard.highlightEndTime = Time.time + 2.0f;
             }
         }
 
         private void RemoveCardFromCurrentDeck(Card3D cardRemoved)
         {
-            // Ignore any cards removed from our deck that is "unknown"
-            // This is where the assumption is made that no cards are prized
-            // AFAIK, the only time private cards are removed from the deck is during prizing.
             if (string.IsNullOrEmpty(cardRemoved.entityID) || cardRemoved.entityID.Equals("PRIVATE"))
             {
                 return;
             }
-            // We assume the deck already contains the keys to every card, so no need for null checks
             if (!string.IsNullOrEmpty(cardRemoved.cardSourceID))
             {
-                var cardInDeck = _currentCardsInDeck[cardRemoved.cardSourceID];
-                if (cardInDeck.quantity > 0)
+                var trackedCard = _currentCardsInDeck[cardRemoved.cardSourceID];
+                if (trackedCard.card.quantity > 0)
                 {
-                    cardInDeck.quantity--;
+                    trackedCard.card.quantity--;
+                    trackedCard.highlightState = HighlightState.Removed;
+                    trackedCard.highlightEndTime = Time.time + 2.0f;
                 }
             }
             var assumedTotal = GetAssumedTotalQuantityOfCards();
-            // When players deck search, deduce the prize cards
             if (_cardCount == 0 && assumedTotal != 0 && assumedTotal != prizeCards.GetKnownPrizeCardsCount())
             {
                 if (assumedTotal == prizeCards.GetPrizeCount())
                 {
-                    // Move all the current cards still "assumed" left in the deck to prize cards
                     foreach (var kvp in _currentCardsInDeck)
                     {
-                        // All cards with a quantity of non-zero value during a deck search is considered a prized card
-                        if (kvp.Value.quantity != 0)
+                        if (kvp.Value.card.quantity != 0)
                         {
-                            var cardID = kvp.Value.cardID;
-                            var assumedPrizeCard = kvp.Value;
-                            prizeCards.KnownPrizeCards.Add(cardID, new Card(assumedPrizeCard));
-                            assumedPrizeCard.quantity = 0;
+                            var cardID = kvp.Value.card.cardID;
+                            var assumedPrizeCard = kvp.Value.card;
+                            prizeCards.KnownPrizeCards.Add(cardID, new TrackedCard(new Card(assumedPrizeCard)));
+                            kvp.Value.card.quantity = 0;
                         }
                     }
                 }
-                // This targets the edge case of when a player takes a prize card without ever having deck searched
                 else if (assumedTotal == (prizeCards.GetPrizeCount() + prizeCards.GetRemovedPrizeCardsCount()))
                 {
-                    // Remove the appropriate cards from the "assumed" deck
                     foreach (var kvp in prizeCards.RemovedPrizedCards)
                     {
                         var removedPrizeCard = kvp.Value;
-                        _currentCardsInDeck[kvp.Key].quantity -= removedPrizeCard.quantity;
+                        _currentCardsInDeck[kvp.Key].card.quantity -= removedPrizeCard.card.quantity;
                     }
-                    // Move all the current cards still "assumed" left in the deck to prize cards
                     foreach (var kvp in _currentCardsInDeck)
                     {
-                        // All cards with a quantity of non-zero value during a deck search is considered a prized card
-                        if (kvp.Value.quantity != 0)
+                        if (kvp.Value.card.quantity != 0)
                         {
-                            var cardID = kvp.Value.cardID;
-                            var assumedPrizeCard = kvp.Value;
-                            prizeCards.KnownPrizeCards.Add(cardID, new Card(assumedPrizeCard));
-                            assumedPrizeCard.quantity = 0;
+                            var cardID = kvp.Value.card.cardID;
+                            var assumedPrizeCard = kvp.Value.card;
+                            prizeCards.KnownPrizeCards.Add(cardID, new TrackedCard(new Card(assumedPrizeCard)));
+                            kvp.Value.card.quantity = 0;
                         }
                     }
                 }

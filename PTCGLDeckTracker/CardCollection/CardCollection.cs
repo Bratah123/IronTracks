@@ -10,7 +10,7 @@ namespace PTCGLDeckTracker.CardCollection
     internal abstract class CardCollection
     {
         // card_id : Card
-        protected Dictionary<string, Card> _cards = new Dictionary<string, Card>();
+        protected Dictionary<string, TrackedCard> _cards = new Dictionary<string, TrackedCard>();
 
         // card_id : quantity
         protected Dictionary<string, int> _cardsWithId = new Dictionary<string, int>();

@@ -36,60 +36,8 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\MelonLoader\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="CardDatabase.DataAccess, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\CardDatabase.DataAccess.dll</HintPath>
-    </Reference>
-    <Reference Include="MatchLogic, Version=6.5.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\MatchLogic.dll</HintPath>
-    </Reference>
-    <Reference Include="MelonLoader">
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\MelonLoader\MelonLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="RainierClientSDK, Version=13.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\RainierClientSDK.dll</HintPath>
-    </Reference>
-    <Reference Include="SharedLogicUtils, Version=8.0.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\SharedLogicUtils.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>E:\PTCGL\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="CardCollection\Card.cs" />
+    <Compile Include="CardCollection\TrackedCard.cs" />
     <Compile Include="CardCollection\CardCollection.cs" />
     <Compile Include="CardCollection\Deck.cs" />
     <Compile Include="CardCollection\DiscardPile.cs" />
@@ -98,6 +46,41 @@
     <Compile Include="IronTracks.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\MelonLoader\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="CardDatabase.DataAccess">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\CardDatabase.DataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="MelonLoader">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\MelonLoader\MelonLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="RainierClientSDK">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\RainierClientSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="SharedLogicUtils">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\SharedLogicUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>D:\Pokemon\Pokemon Trading Card Game Live\Pokemon TCG Live_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
