@@ -49,11 +49,6 @@ namespace PTCGLDeckTracker
         private const float PrizeGridStartY = 2.5f;
         private const float PrizeGridSpacingX = 14f;
         private const float PrizeGridSpacingY = -20f;
-        private const float PrizeBackgroundPositionZ = 5f;
-        private const float PrizeBackgroundScaleX = 2.5f;
-        private const float PrizeBackgroundScaleY = 1f;
-        private const float PrizeBackgroundScaleZ = 1.5f;
-        private static readonly Color PrizeBackgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.75f);
 
         // Control Panel Constants
         private const float ControlPanelWidth = 300f;
@@ -394,14 +389,6 @@ namespace PTCGLDeckTracker
             _prizeCardsSpawned = true;
             _showPrizeCardTitle = true;
 
-            _prizeCardBackground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            _prizeCardBackground.transform.position = new Vector3(0, 0, PrizeBackgroundPositionZ);
-            _prizeCardBackground.transform.localScale = new Vector3(PrizeBackgroundScaleX, PrizeBackgroundScaleY, PrizeBackgroundScaleZ);
-            _prizeCardBackground.transform.rotation = Quaternion.Euler(CardSpawnXRotation, CardSpawnYRotation, 0f);
-            Renderer backgroundRenderer = _prizeCardBackground.GetComponent<Renderer>();
-            backgroundRenderer.material.shader = Shader.Find("Transparent/Diffuse");
-            backgroundRenderer.material.color = PrizeBackgroundColor;
-
             int column = 0;
             int row = 0;
 
@@ -410,7 +397,7 @@ namespace PTCGLDeckTracker
                 for (int i = 0; i < prizeCard.card.quantity; i++)
                 {
                     CardBasic cardBasic = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
-                    Vector3 position = new Vector3(PrizeGridStartX + (column * PrizeGridSpacingX), 0, PrizeGridStartY + (row * PrizeGridSpacingY));
+                    Vector3 position = new Vector3(PrizeGridStartX + (column * PrizeGridSpacingX), 14f, PrizeGridStartY + (row * PrizeGridSpacingY));
                     cardBasic.transform.position = position;
                     cardBasic.transform.rotation = Quaternion.Euler(CardSpawnXRotation, CardSpawnYRotation, 0f);
                     cardBasic.transform.localScale = new Vector3(CardSpawnScale, CardSpawnScale, CardSpawnScale);
