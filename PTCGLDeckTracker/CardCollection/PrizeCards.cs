@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TPCI.Rainier.Match.Cards;
 
 namespace PTCGLDeckTracker.CardCollection
 {
