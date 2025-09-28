@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,24 +9,91 @@ using HarmonyLib;
 using MelonLoader;
 using RainierClientSDK;
 using UnityEngine.SceneManagement;
-using PTCGLDeckTracker.CardCollection;
 using TPCI.Rainier.Match.Cards.Ownership;
+using PTCGLDeckTracker.CardCollection;
+using TPCI.Rainier.Match.Cards;
+using CardDatabase.DataAccess;
 
 namespace PTCGLDeckTracker
 {
     public class IronTracks : MelonMod
     {
+        // General UI Constants
+        private const float DefaultWindowWidth = 250f;
+        private const float LineHeight = 20f;
+        private const float WindowHeaderHeight = 25f;
+        private const float WindowVerticalPadding = 60f;
+        private const int FontSize = 15;
+        private const int TextPadding = 5;
+        private const float HorizontalMargin = 5f;
+        private const float TotalHorizontalMargin = HorizontalMargin * 2;
+
+        // Deck Tracker Constants
+        private const float DeckTrackerInitialHeight = 100f;
+        private const int DeckCounterLines = 3; // 2 counters + 1 blank line
+
+        // Prize Tracker Constants
+        private const float PrizeTrackerInitialHeight = 100f;
+        private const float PrizeTrackerInitialY = 200f;
+        private const int PrizeCounterLines = 2; // 1 counter + 1 blank line
+
+        // 3D Prize Display Constants
+        private const float PrizeTitleWidth = 200f;
+        private const float PrizeTitleHeight = 30f;
+        private const float PrizeTitleInitialY = 10f;
+        private const float CardSpawnXRotation = -55f;
+        private const float CardSpawnYRotation = 180f;
+        private const float CardSpawnScale = 2f;
+        private const int PrizeGridColumns = 3;
+        private const float PrizeGridStartX = -14f;
+        private const float PrizeGridStartY = 2.5f;
+        private const float PrizeGridSpacingX = 14f;
+        private const float PrizeGridSpacingY = -20f;
+        private const float PrizeBackgroundPositionZ = 5f;
+        private const float PrizeBackgroundScaleX = 2.5f;
+        private const float PrizeBackgroundScaleY = 1f;
+        private const float PrizeBackgroundScaleZ = 1.5f;
+        private static readonly Color PrizeBackgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.75f);
+
+        // Control Panel Constants
+        private const float ControlPanelWidth = 300f;
+        private const float ControlPanelHeight = 200f;
+
+        // Tooltip Constants
+        private const float TooltipHoverDelay = 0.5f; // Half a second
+
         bool enableDeckTracker = false;
         bool enablePrizeCards = false;
         static Player player = new Player();
         const String GAME_SCENE_NAME = "Match_Landscape";
         const float HighlightDuration = 2.0f;
 
-        private Rect _deckTrackerWindowRect = new Rect(Screen.width - 250, 0, 250, 100);
-        private Rect _prizeCardsWindowRect = new Rect(0, 200, 250, 100);
+        private TrackedCard _hoveredCard;
+        private CardBasic _tooltipCardObject;
+        private string _currentlyDisplayedTooltipCardId;
+
+        private float _hoverStartTime;
+        private TrackedCard _pendingTooltipCard;
+
+        private Rect _deckTrackerWindowRect = new Rect(Screen.width - DefaultWindowWidth, 0, DefaultWindowWidth, DeckTrackerInitialHeight);
+        private Rect _prizeCardsWindowRect = new Rect(0, PrizeTrackerInitialY, DefaultWindowWidth, PrizeTrackerInitialHeight);
+        private bool _prizeCardsSpawned = false;
+        private readonly List<CardBasic> _spawnedPrizeCards = new List<CardBasic>();
+        private GameObject _prizeCardBackground;
+        private bool _showPrizeCardTitle = false;
+        private Rect _prizeCardTitleRect = new Rect(Screen.width / 2 - (PrizeTitleWidth / 2), PrizeTitleInitialY, PrizeTitleWidth, PrizeTitleHeight);
+        private bool _showControlPanel = false;
+        private Rect _controlPanelRect = new Rect(Screen.width / 2 - (ControlPanelWidth / 2), Screen.height / 2 - (ControlPanelHeight / 2), ControlPanelWidth, ControlPanelHeight);
 
         public override void OnUpdate()
         {
+            HandleCardTooltip();
+
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                _showControlPanel = !_showControlPanel;
+            }
+
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 enableDeckTracker = !enableDeckTracker;
@@ -39,25 +106,22 @@ namespace PTCGLDeckTracker
             }
             else if (Input.GetKeyDown(KeyCode.C) && SceneManager.GetActiveScene().name == GAME_SCENE_NAME)
             {
-                /*LoggerInstance.Msg("Debug: Spawning a Card Basic");
-                
-                // While in the game scene, the basic card spawn in with a rotation of 0 while the entire game is
-                // rotated on the X axis ever so slightly, this -55f offset is to make the card appear flat on the
-                // player's POV
-                float rotationOnX = -55f;
-
-                CardBasic cardBasic = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
-                Vector3 vector = new Vector3(0f, 0f, Card3D.cardDepth * 1);
-                // For some reason, these cards are instantiated backwards, which causes the players to see the backside of the card
-                cardBasic.transform.position = vector;
-                cardBasic.transform.rotation = Quaternion.Euler(rotationOnX, 180f, 0f);
-                cardBasic.transform.localScale = new Vector3(2f, 2f, 2f);
-                cardBasic.Init("swsh11_137");*/
+                if (_prizeCardsSpawned)
+                {
+                    DespawnPrizeCardsInWorld();
+                }
+                else
+                {
+                    SpawnPrizeCardsInWorld();
+                }
             }
         }
 
         public override void OnGUI()
         {
+            // Reset hovered card at the beginning of the GUI frame
+            _hoveredCard = null;
+
             if (enableDeckTracker)
             {
                 _deckTrackerWindowRect = GUI.Window(0, _deckTrackerWindowRect, DrawDeckTrackerWindow, "Deck " + "(" + player.deck.GetDeckOwner() + ")");
@@ -67,6 +131,16 @@ namespace PTCGLDeckTracker
             {
                 _prizeCardsWindowRect = GUI.Window(1, _prizeCardsWindowRect, DrawPrizeCardsWindow, "Prize Cards");
             }
+
+            if (_showPrizeCardTitle)
+            {
+                GUI.Window(2, _prizeCardTitleRect, DrawPrizeTitleWindow, "Prize Cards");
+            }
+
+            if (_showControlPanel)
+            {
+                _controlPanelRect = GUI.Window(3, _controlPanelRect, DrawControlPanelWindow, "Mod Controls");
+            }
         }
 
         void DrawDeckTrackerWindow(int windowID)
@@ -74,24 +148,25 @@ namespace PTCGLDeckTracker
             GUI.DragWindow(new Rect(0, 0, 10000, 20));
 
             var cards = player.deck.GetCardsForRender();
-            // Add 2 for the counters, plus a little extra for spacing
-            var boxHeight = (cards.Count + 3) * 20;
+            var boxHeight = (cards.Count + DeckCounterLines) * LineHeight;
             if (boxHeight == 0)
             {
-                boxHeight = 100;
+                boxHeight = DeckTrackerInitialHeight;
             }
-            _deckTrackerWindowRect.height = boxHeight + 60; // Adjust height dynamically + padding
+            _deckTrackerWindowRect.height = boxHeight + WindowVerticalPadding;
 
             var totalAssumedCards = player.deck.GetAssumedTotalQuantityOfCards();
             var totalActualCards = player.deck.GetTotalQuantityOfCards();
             var isUncertain = totalAssumedCards != totalActualCards;
 
-            var yOffset = 25;
+            var yOffset = WindowHeaderHeight;
             foreach (var card in cards)
             {
-                var deckGUIStyle = new GUIStyle();
-                deckGUIStyle.fontSize = 15;
-                deckGUIStyle.padding = new RectOffset(5, 5, 5, 5);
+                var deckGUIStyle = new GUIStyle
+                {
+                    fontSize = FontSize,
+                    padding = new RectOffset(TextPadding, TextPadding, TextPadding, TextPadding)
+                };
 
                 if (card.highlightState != HighlightState.None)
                 {
@@ -118,20 +193,34 @@ namespace PTCGLDeckTracker
                 {
                     cardText += " (?)";
                 }
-                GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), cardText, deckGUIStyle);
-                yOffset += 20;
+                var cardLabelRect = new Rect(HorizontalMargin, yOffset, _deckTrackerWindowRect.width - TotalHorizontalMargin, LineHeight);
+                GUI.Label(cardLabelRect, cardText, deckGUIStyle);
+
+                // Check for hover
+                if (cardLabelRect.Contains(Event.current.mousePosition))
+                {
+                    _hoveredCard = card;
+                }
+
+                yOffset += LineHeight;
             }
 
-            // Add the counters back
-            var counterGUIStyle = new GUIStyle();
-            counterGUIStyle.fontSize = 15;
-            counterGUIStyle.padding = new RectOffset(5, 5, 5, 5);
-            counterGUIStyle.normal.textColor = Color.white;
+            var counterGUIStyle = new GUIStyle
+            {
+                fontSize = FontSize,
+                padding = new RectOffset(TextPadding, TextPadding, TextPadding, TextPadding),
+                normal = { textColor = Color.white }
+            };
 
-            yOffset += 20; // Add some space
-            GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), "Total Cards in Deck: " + totalActualCards, counterGUIStyle);
-            yOffset += 20;
-            GUI.Label(new Rect(5, yOffset, _deckTrackerWindowRect.width - 10, 20), "Total ASSUMED Cards in Deck: " + totalAssumedCards, counterGUIStyle);
+            yOffset += LineHeight;
+            GUI.Label(new Rect(HorizontalMargin, yOffset, _deckTrackerWindowRect.width - TotalHorizontalMargin, LineHeight), "Total Cards in Deck: " + totalActualCards, counterGUIStyle);
+            yOffset += LineHeight;
+            GUI.Label(new Rect(HorizontalMargin, yOffset, _deckTrackerWindowRect.width - TotalHorizontalMargin, LineHeight), "Total ASSUMED Cards in Deck: " + totalAssumedCards, counterGUIStyle);
+        }
+
+        void DrawPrizeTitleWindow(int windowID)
+        {
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
         }
 
         void DrawPrizeCardsWindow(int windowID)
@@ -139,20 +228,21 @@ namespace PTCGLDeckTracker
             GUI.DragWindow(new Rect(0, 0, 10000, 20));
 
             var cards = player.GetPrizeCards().GetCardsForRender();
-            // Add 1 for the counter, plus a little extra for spacing
-            var boxHeight = (cards.Count + 2) * 20;
+            var boxHeight = (cards.Count + PrizeCounterLines) * LineHeight;
             if (boxHeight == 0)
             {
-                boxHeight = 100;
+                boxHeight = PrizeTrackerInitialHeight;
             }
-            _prizeCardsWindowRect.height = boxHeight + 60; // Adjust height dynamically + padding
+            _prizeCardsWindowRect.height = boxHeight + WindowVerticalPadding;
 
-            var yOffset = 25;
+            var yOffset = WindowHeaderHeight;
             foreach (var card in cards)
             {
-                var deckGUIStyle = new GUIStyle();
-                deckGUIStyle.fontSize = 15;
-                deckGUIStyle.padding = new RectOffset(5, 5, 5, 5);
+                var deckGUIStyle = new GUIStyle
+                {
+                    fontSize = FontSize,
+                    padding = new RectOffset(TextPadding, TextPadding, TextPadding, TextPadding)
+                };
 
                 if (card.highlightState != HighlightState.None)
                 {
@@ -174,18 +264,27 @@ namespace PTCGLDeckTracker
                     deckGUIStyle.normal.textColor = Color.white;
                 }
 
-                GUI.Label(new Rect(5, yOffset, _prizeCardsWindowRect.width - 10, 20), card.card.quantity + " " + card.card.englishName, deckGUIStyle);
-                yOffset += 20;
+                var cardLabelRect = new Rect(HorizontalMargin, yOffset, _prizeCardsWindowRect.width - TotalHorizontalMargin, LineHeight);
+                GUI.Label(cardLabelRect, card.card.quantity + " " + card.card.englishName, deckGUIStyle);
+
+                // Check for hover
+                if (cardLabelRect.Contains(Event.current.mousePosition))
+                {
+                    _hoveredCard = card;
+                }
+
+                yOffset += LineHeight;
             }
 
-            // Add the counter back
-            var counterGUIStyle = new GUIStyle();
-            counterGUIStyle.fontSize = 15;
-            counterGUIStyle.padding = new RectOffset(5, 5, 5, 5);
-            counterGUIStyle.normal.textColor = Color.white;
+            var counterGUIStyle = new GUIStyle
+            {
+                fontSize = FontSize,
+                padding = new RectOffset(TextPadding, TextPadding, TextPadding, TextPadding),
+                normal = { textColor = Color.white }
+            };
 
-            yOffset += 20; // Add some space
-            GUI.Label(new Rect(5, yOffset, _prizeCardsWindowRect.width - 10, 20), "Total Prize Cards: " + player.GetPrizeCards().GetPrizeCount(), counterGUIStyle);
+            yOffset += LineHeight;
+            GUI.Label(new Rect(HorizontalMargin, yOffset, _prizeCardsWindowRect.width - TotalHorizontalMargin, LineHeight), "Total Prize Cards: " + player.GetPrizeCards().GetPrizeCount(), counterGUIStyle);
         }
 
         private Color GetHighlightColor(HighlightState state)
@@ -198,6 +297,149 @@ namespace PTCGLDeckTracker
                     return Color.red;
                 default:
                     return Color.white;
+            }
+        }
+
+        private void HandleCardTooltip()
+        {
+            // User is hovering over a card
+            if (_hoveredCard != null)
+            {
+                // If this is a new card they're hovering over, reset the timer and set the new pending card
+                if (_pendingTooltipCard != _hoveredCard)
+                {
+                    _pendingTooltipCard = _hoveredCard;
+                    _hoverStartTime = Time.time;
+                    DespawnTooltipCard(); // Despawn immediately if we move to a new card
+                }
+                // If enough time has passed and no tooltip is currently shown for this card, spawn it
+                else if (Time.time - _hoverStartTime >= TooltipHoverDelay && _currentlyDisplayedTooltipCardId == null)
+                {
+                    SpawnTooltipCard(_pendingTooltipCard);
+                }
+            }
+            // User is not hovering over any card
+            else
+            {
+                _pendingTooltipCard = null;
+                _hoverStartTime = 0f;
+                DespawnTooltipCard();
+            }
+        }
+
+        private void SpawnTooltipCard(TrackedCard card)
+        {
+            _tooltipCardObject = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
+            if (_tooltipCardObject == null) return;
+
+            // Use a fixed central position
+            _tooltipCardObject.transform.position = Vector3.zero;
+
+            // Use the EXACT same rotation and scale as the 3D prize grid cards
+            _tooltipCardObject.transform.rotation = Quaternion.Euler(CardSpawnXRotation, CardSpawnYRotation, 0f);
+            _tooltipCardObject.transform.localScale = new Vector3(CardSpawnScale, CardSpawnScale, CardSpawnScale);
+
+            _tooltipCardObject.Init(card.card.cardID);
+            _currentlyDisplayedTooltipCardId = card.card.cardID;
+        }
+
+        private void DespawnTooltipCard()
+        {
+            if (_tooltipCardObject != null)
+            {
+                UnityEngine.Object.Destroy(_tooltipCardObject.gameObject);
+                _tooltipCardObject = null;
+            }
+            _currentlyDisplayedTooltipCardId = null;
+        }
+
+        void DrawControlPanelWindow(int windowID)
+        {
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+
+            GUILayout.BeginVertical();
+
+            enableDeckTracker = GUILayout.Toggle(enableDeckTracker, "Show Deck Tracker");
+            enablePrizeCards = GUILayout.Toggle(enablePrizeCards, "Show Prize Cards");
+
+            if (GUILayout.Button("Show/Hide 3D Prize Cards"))
+            {
+                if (SceneManager.GetActiveScene().name == GAME_SCENE_NAME)
+                {
+                    if (_prizeCardsSpawned)
+                    {
+                        DespawnPrizeCardsInWorld();
+                    }
+                    else
+                    {
+                        SpawnPrizeCardsInWorld();
+                    }
+                }
+            }
+
+            if (GUILayout.Button("Reset Window Positions"))
+            {
+                _deckTrackerWindowRect = new Rect(Screen.width - DefaultWindowWidth, 0, DefaultWindowWidth, DeckTrackerInitialHeight);
+                _prizeCardsWindowRect = new Rect(0, PrizeTrackerInitialY, DefaultWindowWidth, PrizeTrackerInitialHeight);
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        private void SpawnPrizeCardsInWorld()
+        {
+            var prizeCards = player.GetPrizeCards().GetCardsForRender();
+            if (prizeCards.Count == 0) return;
+
+            _prizeCardsSpawned = true;
+            _showPrizeCardTitle = true;
+
+            _prizeCardBackground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            _prizeCardBackground.transform.position = new Vector3(0, 0, PrizeBackgroundPositionZ);
+            _prizeCardBackground.transform.localScale = new Vector3(PrizeBackgroundScaleX, PrizeBackgroundScaleY, PrizeBackgroundScaleZ);
+            _prizeCardBackground.transform.rotation = Quaternion.Euler(CardSpawnXRotation, CardSpawnYRotation, 0f);
+            Renderer backgroundRenderer = _prizeCardBackground.GetComponent<Renderer>();
+            backgroundRenderer.material.shader = Shader.Find("Transparent/Diffuse");
+            backgroundRenderer.material.color = PrizeBackgroundColor;
+
+            int column = 0;
+            int row = 0;
+
+            foreach (var prizeCard in prizeCards)
+            {
+                for (int i = 0; i < prizeCard.card.quantity; i++)
+                {
+                    CardBasic cardBasic = ManagerSingleton<RainierManager>.instance.cardSpawner.SpawnCardBasic();
+                    Vector3 position = new Vector3(PrizeGridStartX + (column * PrizeGridSpacingX), 0, PrizeGridStartY + (row * PrizeGridSpacingY));
+                    cardBasic.transform.position = position;
+                    cardBasic.transform.rotation = Quaternion.Euler(CardSpawnXRotation, CardSpawnYRotation, 0f);
+                    cardBasic.transform.localScale = new Vector3(CardSpawnScale, CardSpawnScale, CardSpawnScale);
+                    cardBasic.Init(prizeCard.card.cardID);
+                    _spawnedPrizeCards.Add(cardBasic);
+
+                    column++;
+                    if (column >= PrizeGridColumns)
+                    {
+                        column = 0;
+                        row++;
+                    }
+                }
+            }
+        }
+
+        private void DespawnPrizeCardsInWorld()
+        {
+            _prizeCardsSpawned = false;
+            _showPrizeCardTitle = false;
+            foreach (var card in _spawnedPrizeCards)
+            {
+                UnityEngine.Object.Destroy(card.gameObject);
+            }
+            _spawnedPrizeCards.Clear();
+
+            if (_prizeCardBackground != null)
+            {
+                UnityEngine.Object.Destroy(_prizeCardBackground);
             }
         }
 
